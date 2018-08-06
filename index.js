@@ -6,7 +6,7 @@ const typeCache = new WeakMap();
 
 mapBuiltins();
 
-Object.assign(T, {check, verify, def, defCollection, option, enum, guard, errors});
+Object.assign(T, {check, verify, def, defCollection, option, or, guard, errors});
 
 export default function T(parts, ...vals) {
   parts = [...parts];
@@ -28,7 +28,7 @@ function def(name, spec) {
 
 }
 
-function enum(...types) {
+function or(...types) {
 
 }
 
