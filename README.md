@@ -64,6 +64,7 @@ const optionalString = T.option(T`String`);
 So we've seen:
 
 - Collection types (container and member)
+- Compound types (a type augmented with one or more verifiers)
 - Enum types (lists of other types)
 - Option types 
 - Type verification, erroring and guarding.
