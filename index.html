@@ -1,4 +1,14 @@
 <script type=module>
   import {T} from './jtype.js';
   Object.assign(self, {T});
+
+  T.def('Cris', {
+    ['a.b.c']: T`String`
+  });
+
+  const result1 = T.validate(T`Cris`, {a:1});
+  console.log({result1});
+
+  const result2 = T.validate(T`Cris`, {a:{b:{c:'asdsad'}}});
+  console.log({result2});
 </script>
