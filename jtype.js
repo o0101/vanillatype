@@ -65,7 +65,6 @@
   }
 
   function mapBuiltins() {
-    BuiltIns.forEach(t => (console.log(t,t.name),def(t.name, {verify: i => i.constructor.name === name})));  
-    console.log(typeCache);
+    BuiltIns.forEach(t => def(t.name, {verify: i => i.constructor.name === name}));  
   }
 
