@@ -2,6 +2,28 @@
 
 Rudimentary type system for JavaScript
 
+## getting and incorporating
+
+We use ES modules.
+
+You can use in your client side code like:
+
+```JavaScript
+  import {T} from 'https://unpkg.com/jtype-system';
+```
+
+While the tests are currently only written for client side, you can use in Node.js like so:
+
+```shell
+$ npm i --save jtype-system
+```
+
+```JavaScript
+import {T} from 'jtype-system';
+```
+
+But you'll need to be using [ESM](https://www.npmjs.com/package/esm)
+
 ## aim
 
 ```javascript
