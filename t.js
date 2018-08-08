@@ -5,10 +5,10 @@
     Uint8Array, Uint16Array, Uint32Array, Float32Array, Float64Array,
     Int8Array, Int16Array, Int32Array, 
     Uint8ClampedArray, 
-    URL, Error, File, Event, EventTarget, 
     ...(BROWSER_SIDE ? [
       Node,NodeList,Element,HTMLElement, Blob, ArrayBuffer,
-      FileList, Text, Document, DocumentFragment
+      FileList, Text, Document, DocumentFragment,
+      Error, File, Event, EventTarget, URL
     ] : [ Buffer ])
   ];
 
