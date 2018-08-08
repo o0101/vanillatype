@@ -1,4 +1,6 @@
 
+  // FIXME verify functions ought to throw if they fail so errors can be collected 
+  // without introducing a return value semantics
   import {T} from './jtype.js';
   Object.assign(self, {T});
 
@@ -45,3 +47,38 @@
   ];
 
   console.log({result6});
+
+  T.defOr(`Key`, T`String`, T`Integer`);
+  T.defOption(T`Key`);
+
+  const keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    123122232
+  ];
+  const not_keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    1231.22232
+  ];
+  const gappy_keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    null,
+    908098,
+    null,
+    "1232",
+    'safsda'
+  ];
+
+  T.defCollection(`KeyList`, {container: T`Iterable`, member: T`Key`});
+  T.defCollection(`OptionalKeyList`, {container: T`Iterable`, member: T`?Key`});
+
+  const result7 = T.validate(T`KeyList`, keys);
+  const result8 = T.validate(T`KeyList`, not_keys);
+  const result9 = T.validate(T`OptionalKeyList`, gappy_keys);
+
+  console.log({result7, result8,result9});

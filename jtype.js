@@ -7,7 +7,7 @@
   ];
   const typeCache = new Map();
 
-  Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, option, defOption, or, guard, errors});
+  Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, defOr, option, defOption, or, guard, errors});
 
   defineSpecials();
   mapBuiltins();
@@ -22,13 +22,11 @@
   }
 
   function validate(type, instance) {
-    let typeName = type;
-    if (type instanceof Type) {
-      typeName = type.name;
-    }
+    guardType(type);
+    guardExists(type);
+    let typeName = type.name;
 
     const {spec,kind,verify} = typeCache.get(typeName);
-    if ( ! kind ) throw { error: `No such type defined: ${typeName}` };
 
     const bigErrors = [];
 
@@ -110,7 +108,8 @@
   }
 
   function defSub(type, spec, {verify} = {}) {
-    if ( ! exists(type.name) ) throw {error:`Type to subclass must exist. Type ${type.name} has not been defined.`};
+    guardType(type);
+    guardExists(type);
     return def(`>${type.name}`, spec, {verify});
   }
 
@@ -123,9 +122,9 @@
   }
 
   function defOption(type) {
-    if ( !(type instanceof Type) ) throw {error: `Type must be a valid Type object.`};
+    guardType(type);
     const typeName = type.name;
-    return T.def(`?${typeName}`, {verify: i => isUnset(i) || T.guard(i,type)});
+    return T.def(`?${typeName}`, null, {verify: i => isUnset(i) || T.check(type,i)});
   }
 
   function verify(...args) { return check(...args); }
@@ -171,12 +170,27 @@
     return new Type(name);
   }
 
-  function or(...types) {
-
+  function or(...types) { // anonymous standin for defOr
+    // could we do this with `name|name2|...` etc ?  we have to sort names so probably can
+    throw {error: `Or is not implemented yet.`};
   }
 
-  function guard(typeName, instance) {
-    if ( ! verify(typeName, instance) ) throw {error: `Type ${typeName} requested, but item is not of that type.`};
+  function defOr(name, ...types) {
+    return T.def(name, null, {verify: i => types.some(t => check(t,i))});
+  }
+
+  function guard(type, instance) {
+    guardType(type);
+    guardExists(type);
+    if ( ! verify(type, instance) ) throw {error: `Type ${typeName} requested, but item is not of that type.`};
+  }
+
+  function guardType(t) {
+    if ( !(t instanceof Type) ) throw {error: `Type must be a valid Type object.`};
+  }
+
+  function guardExists(t) {
+    if ( ! exists(t.name) ) throw {error:`Type must exist. Type ${t.name} has not been defined.`};
   }
 
   function errors(...args) {
