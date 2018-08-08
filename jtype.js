@@ -30,7 +30,7 @@
     const bigErrors = [];
 
     switch(kind) {
-      case "def":
+      case "def": 
         let allValid = true;
         if ( !! spec ) {
           const keyPaths = Object.keys(spec);
@@ -52,6 +52,11 @@
           }
         }
         return {valid: allValid && verified, errors: bigErrors}
+      case "defCollection":
+        const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
+        const {valid:membersValid, errors:memberErrors} = [...instance].every(member => validate(spec.member, member);
+        bigErrors.push(...containerErrors,...memberErrors);
+        return {valid:containerValid && memberValid, errors:bigErrors};
       default: {
         throw {error: `Checking for type kind ${kind} is not yet implemented.`}
       }

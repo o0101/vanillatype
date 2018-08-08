@@ -11,4 +11,9 @@
 
   const result2 = T.validate(T`Cris`, {a:{b:{c:'asdsad'}}});
   console.log({result2});
+
+  T.defCollection(`DOMList`, {
+    container: T`NodeList`,
+    member: T`>Node`
+  });
 </script>
