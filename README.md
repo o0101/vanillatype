@@ -111,6 +111,9 @@ Future roadmap:
 
 Most of the above examples work. Some major exceptions are error collecting is way less than it will be.
 
+The other thing is currently the verification methods (`check`, `validate`, `verify`, `errors`) only support an actual
+Type object as first argument, rather than a String name. I might change that in future, or I might not. 
+
 ## faq - why not just TypeScript?
 
 Why add transpilation and a tool chain, and change your code, and add a whole bunch of assumptions, 
