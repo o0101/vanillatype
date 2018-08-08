@@ -1,19 +1,22 @@
-  const BuiltIns = [Symbol, Boolean, Number, String, Object, Array, Set, Map, WeakMap, WeakSet,
-                    Uint8Array, Uint16Array, Uint32Array, Float32Array, Float64Array,
-                    Int8Array, Int16Array, Int32Array, 
-                    Uint8ClampedArray];
+  const BuiltIns = [
+    Symbol, Boolean, Number, String, Object, Set, Map, WeakMap, WeakSet,
+    Uint8Array, Uint16Array, Uint32Array, Float32Array, Float64Array,
+    Int8Array, Int16Array, Int32Array, 
+    Uint8ClampedArray,
+    Node,NodeList,Element,HTMLElement
+  ];
   const typeCache = new Map();
 
-  mapBuiltins();
+  Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, option, defOption, or, guard, errors});
 
-  Object.assign(T, {check, verify, validate, def, defCollection, option, or, guard, errors});
+  defineSpecials();
+  mapBuiltins();
 
   Object.assign(self, {typeCache});
 
   export function T(parts, ...vals) {
-    parts = [...parts];
-    vals = [...vals];
-    const typeName = parts[0];
+    const cooked = vals.reduce((prev,cur,i) => prev+cur+parts[i+1], parts[0]);
+    const typeName = cooked;
     if ( !typeCache.has(typeName) ) throw {error:`Cannot use type ${typeName} before it is defined.`};
     return new Type(typeName);
   }
@@ -54,9 +57,16 @@
         return {valid: allValid && verified, errors: bigErrors}
       case "defCollection":
         const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
-        const {valid:membersValid, errors:memberErrors} = [...instance].every(member => validate(spec.member, member);
-        bigErrors.push(...containerErrors,...memberErrors);
-        return {valid:containerValid && memberValid, errors:bigErrors};
+        bigErrors.push(...containerErrors);
+        let membersValid = true;
+        if ( containerValid ) {
+           membersValid= [...instance].every(member => {
+            const {valid, errors} = validate(spec.member, member);
+            bigErrors.push(...errors);
+            return valid;
+          });
+        }
+        return {valid:containerValid && membersValid, errors:bigErrors};
       default: {
         throw {error: `Checking for type kind ${kind} is not yet implemented.`}
       }
@@ -92,15 +102,52 @@
   }
 
   function option(type) {
-
+    return T`?${type.name}`;
   }
+
+  function sub(type) {
+    return T`>${type.name}`;
+  }
+
+  function defSub(type, spec, {verify} = {}) {
+    if ( ! exists(type.name) ) throw {error:`Type to subclass must exist. Type ${type.name} has not been defined.`};
+    return def(`>${type.name}`, spec, {verify});
+  }
+
+  function exists(name) {
+    return typeCache.has(name);
+  }
+
+  function guardRedefinition(name) {
+    if ( exists(name) ) throw {error: `Type ${name} cannot be redefined.`};
+  }
+
+  function defOption(type) {
+    if ( !(type instanceof Type) ) throw {error: `Type must be a valid Type object.`};
+    const typeName = type.name;
+    return T.def(`?${typeName}`, {verify: i => isUnset(i) || T.guard(i,type)});
+  }
+
   function verify(...args) { return check(...args); }
 
   function defCollection(name, {container, member}) {
     if ( !name ) throw {error:`Type must be named.`}; 
     if ( !container || !member ) throw {error:`Type must be specified.`};
+    guardRedefinition(name);
+
     const kind = 'defCollection';
     const spec = {kind, spec: { container, member}};
+    typeCache.set(name, spec);
+    return new Type(name);
+  }
+
+  function defTuple(name, {pattern}) {
+    if ( !name ) throw {error:`Type must be named.`}; 
+    if ( !pattern ) throw {error:`Type must be specified.`};
+    const kind = 'def';
+    const specObj = {};
+    pattern.forEach((type,key) => specObj[key] = type);
+    const spec = {kind, spec: specObj};
     typeCache.set(name, spec);
     return new Type(name);
   }
@@ -117,6 +164,7 @@
 
   function def(name, spec, {verify} = {}) {
     if ( !name ) throw {error:`Type must be named.`}; 
+    guardRedefinition(name);
 
     const kind = 'def';
     typeCache.set(name, {spec,kind,verify});
@@ -137,5 +185,20 @@
 
   function mapBuiltins() {
     BuiltIns.forEach(t => def(t.name, null, {verify: i => i.constructor.name === t.name}));  
+    BuiltIns.forEach(t => defSub(T`${t.name}`, null, {verify: i => i instanceof t}));  
+  }
+
+  function defineSpecials() {
+    T.def(`Any`, null, {verify: i => true});
+    T.def(`Some`, null, {verify: i => !isUnset(i)});
+    T.def(`None`, null, {verify: i => isUnset(i)});
+    T.def(`Function`, null, {verify: i => i instanceof Function});
+    T.def(`Integer`, null, {verify: i => Number.isInteger(i)});
+    T.def(`Array`, null, {verify: i => Array.isArray(i)});
+    T.def(`Iterable`, null, {verify: i => i[Symbol.iterator] instanceof Function});
+  }
+
+  function isUnset(i) {
+    return i === null || i === undefined;
   }
 
