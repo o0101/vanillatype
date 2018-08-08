@@ -1,0 +1,21 @@
+{
+  "name": "jtype-system",
+  "version": "1.0.0",
+  "description": "A rudimentary type system for JS",
+  "main": "jtype.js",
+  "scripts": {
+    "test": "serve -p 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//crislin2046/jtype"
+  },
+  "keywords": [
+    "javascript",
+    "type-system",
+    "jtype",
+    "dosy"
+  ],
+  "author": "@dosy",
+  "license": "MIT"
+}

@@ -81,3 +81,20 @@ Future roadmap:
 - type mixin
 - type inheritance ? (unsure about this one)
 
+## what works sofar
+
+Most of the above examples work. Some major exceptions are error collecting is way less than it will be.
+
+## faq - why not just TypeScript?
+
+Why add transpilation and a tool chain, and change your code, and add a whole bunch of assumptions, 
+when you can write a rudimentary type system in JS in a couple hundred lines.
+
+## purpose
+
+I made this because I wanted to replace boilerplate repitiious checking code at the start of functions with 
+something that was more consistent across different functions and frameworks, and that saved me time and saved me from thinking about the same types of book keeping, parameter validation issues, again and again.
+
+This is not supposed to be some "Ideal Type System", it is meant to be a practical tool that helps with the above to improve developer productivity. But ideas from "Ideal type systems", and "theories" are liberally borrowed when they are useful for this purpose / make the code / conceptual model cleaner and clearer. 
+
+
