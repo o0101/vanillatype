@@ -9,7 +9,7 @@ We use ES modules.
 You can use in your client side code like:
 
 ```JavaScript
-  import {T} from 'https://unpkg.com/jtype-system';
+  import {T} from 'https://unpkg.com/jtype-system/t.js';
 ```
 
 While the tests are currently only written for client side, you can use in Node.js like so:
@@ -23,10 +23,6 @@ import {T} from 'jtype-system';
 ```
 
 But you'll need to be using [ESM](https://www.npmjs.com/package/esm)
-
-and currently the Builtins provided are all browser side objects, so it 
-basically won't work in Node yet unless you comment out the `mapBuiltins` functions
-or I add some "? is this the browser or the server?" checking.
 
 ## aim
 
