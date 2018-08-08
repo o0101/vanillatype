@@ -1,3 +1,4 @@
+
   export const BROWSER_SIDE      = (() => {try{ return self.DOMParser && true; } catch(e) { return false; }})();
 
   const BuiltIns = [
@@ -18,8 +19,6 @@
 
   defineSpecials();
   mapBuiltins();
-
-  Object.assign(self, {typeCache});
 
   export function T(parts, ...vals) {
     const cooked = vals.reduce((prev,cur,i) => prev+cur+parts[i+1], parts[0]);
