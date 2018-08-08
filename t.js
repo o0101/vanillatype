@@ -1,10 +1,17 @@
+  export const BROWSER_SIDE      = (() => {try{ return self.DOMParser && true; } catch(e) { return false; }})();
+
   const BuiltIns = [
     Symbol, Boolean, Number, String, Object, Set, Map, WeakMap, WeakSet,
     Uint8Array, Uint16Array, Uint32Array, Float32Array, Float64Array,
     Int8Array, Int16Array, Int32Array, 
-    Uint8ClampedArray,
-    Node,NodeList,Element,HTMLElement
+    Uint8ClampedArray, 
+    URL, Error, File, Event, EventTarget, 
+    ...(BROWSER_SIDE ? [
+      Node,NodeList,Element,HTMLElement, Blob, ArrayBuffer,
+      FileList, Text, Document, DocumentFragment
+    ] : [ Buffer ])
   ];
+
   const typeCache = new Map();
 
   Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, defOr, option, defOption, or, guard, errors});

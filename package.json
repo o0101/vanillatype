@@ -2,7 +2,7 @@
   "name": "jtype-system",
   "version": "1.0.1",
   "description": "A rudimentary type system for JS",
-  "main": "jtype.js",
+  "main": "index.js",
   "scripts": {
     "test": "serve -p 8080"
   },
@@ -17,5 +17,8 @@
     "dosy"
   ],
   "author": "@dosy",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "esm": "^3.0.74"
+  }
 }
