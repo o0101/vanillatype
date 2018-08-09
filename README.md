@@ -2,6 +2,8 @@
 
 Rudimentary type system for JavaScript
 
+Vote Now [Show HN](https://news.ycombinator.com/item?id=17723268)
+
 ## getting and incorporating
 
 We use ES modules.
