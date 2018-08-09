@@ -1,7 +1,8 @@
 
   // FIXME verify functions ought to throw if they fail so errors can be collected 
   // without introducing a return value semantics
-  import {T} from './jtype.js';
+  self.DEBUG = true;
+  import {T} from './t.js';
   Object.assign(self, {T});
 
   T.def('Cris', {

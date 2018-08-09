@@ -13,6 +13,8 @@
     ] : [ Buffer ])
   ];
 
+  const isNone = instance => instance == null || instance == undefined;
+
   const typeCache = new Map();
 
   Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, defOr, option, defOption, or, guard, errors});
@@ -41,7 +43,7 @@
         let allValid = true;
         if ( !! spec ) {
           const keyPaths = Object.keys(spec);
-          allValid = keyPaths.every(kp => {
+          allValid = !isNone(instance) && keyPaths.every(kp => {
             const {resolved, errors:lookupErrors} = lookup(instance,kp);
             bigErrors.push(...lookupErrors);
             if ( lookupErrors.length ) return false;
@@ -82,7 +84,7 @@
   }
 
   function lookup(obj, keyPath) {
-    if ( !obj ) throw {error:`Lookup requires a non-unset object.`};
+    if ( isNone(obj) ) throw {error:`Lookup requires a non-unset object.`};
 
     if ( !keyPath ) throw {error: `keyPath must not be empty`};
 
