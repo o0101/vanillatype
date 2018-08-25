@@ -1,6 +1,6 @@
 # jtype
 
-Rudimentary type system for JavaScript
+Rudimentary type system for JavaScript.
 
 Vote Now [Show HN](https://news.ycombinator.com/item?id=17723268)
 
