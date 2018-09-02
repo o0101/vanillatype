@@ -34,7 +34,7 @@
     member: T`TypeMapping`
   });
 
-  const result5 = T.validate(T`TypeMap`, typeCache);
+  const result5 = T.validate(T`TypeMap`, T[Symbol.for('jtype-system.typeCache')]);
 
   console.log({result5});
 

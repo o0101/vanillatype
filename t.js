@@ -18,6 +18,8 @@
   const typeCache = new Map();
 
   Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, defOr, option, defOption, or, guard, errors});
+  
+  T[Symbol.for('jtype-system.typeCache')] = typeCache;
 
   defineSpecials();
   mapBuiltins();
@@ -58,6 +60,7 @@
             verified = verify(instance);
           } catch(e) {
             bigErrors.push(e);
+            verified = false;
           }
         }
         return {valid: allValid && verified, errors: bigErrors}
