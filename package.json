@@ -50,5 +50,5 @@
   "scripts": {
     "test": "serve -p 8080"
   },
-  "version": "1.0.4"
+  "version": "1.0.5"
 }
