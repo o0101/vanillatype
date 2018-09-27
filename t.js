@@ -41,7 +41,7 @@
     const bigErrors = [];
 
     switch(kind) {
-      case "def": 
+      case "def": {
         let allValid = true;
         if ( !! spec ) {
           const keyPaths = Object.keys(spec);
@@ -64,7 +64,7 @@
           }
         }
         return {valid: allValid && verified, errors: bigErrors}
-      case "defCollection":
+      } case "defCollection": {
         const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
         bigErrors.push(...containerErrors);
         let membersValid = true;
@@ -75,8 +75,17 @@
             return valid;
           });
         }
-        return {valid:containerValid && membersValid, errors:bigErrors};
-      default: {
+        let verified = true;
+        if ( !!verify ) {
+          try {
+            verified = verify(instance);
+          } catch(e) {
+            bigErrors.push(e);
+            verified = false;
+          }
+        }
+        return {valid:containerValid && membersValid && verified, errors:bigErrors};
+      } default: {
         throw {error: `Checking for type kind ${kind} is not yet implemented.`}
       }
     }
@@ -140,13 +149,13 @@
 
   function verify(...args) { return check(...args); }
 
-  function defCollection(name, {container, member}) {
+  function defCollection(name, {container, member}, {verify} = {}) {
     if ( !name ) throw {error:`Type must be named.`}; 
     if ( !container || !member ) throw {error:`Type must be specified.`};
     guardRedefinition(name);
 
     const kind = 'defCollection';
-    const spec = {kind, spec: { container, member}};
+    const spec = {kind, spec: { container, member}, verify};
     typeCache.set(name, spec);
     return new Type(name);
   }

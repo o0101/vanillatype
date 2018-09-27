@@ -1,24 +1,54 @@
 {
-  "name": "jtype-system",
-  "version": "1.0.4",
+  "_from": "jtype-system@^1.0.4",
+  "_id": "jtype-system@1.0.4",
+  "_inBundle": false,
+  "_integrity": "sha512-LXzoSBjwBiIRfPsYUJYSM8BplCwutw/Bsb/T8WojWSaRCjJI6YkcfdoL2TzRS+cOAz/MKhKZWU1iKAJdnkco2Q==",
+  "_location": "/jtype-system",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "jtype-system@^1.0.4",
+    "name": "jtype-system",
+    "escapedName": "jtype-system",
+    "rawSpec": "^1.0.4",
+    "saveSpec": null,
+    "fetchSpec": "^1.0.4"
+  },
+  "_requiredBy": [
+    "/",
+    "/brutalist-web",
+    "/brutestrap",
+    "/maskingtape.css"
+  ],
+  "_resolved": "https://registry.npmjs.org/jtype-system/-/jtype-system-1.0.4.tgz",
+  "_shasum": "193c6866d36163eea5424687e2de2a811fa6a450",
+  "_spec": "jtype-system@^1.0.4",
+  "_where": "/home/cris7fe/brutal.js",
+  "author": {
+    "name": "@dosy"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "esm": "^3.0.74"
+  },
+  "deprecated": false,
   "description": "A rudimentary type system for JS",
-  "main": "index.js",
-  "scripts": {
-    "test": "serve -p 8080"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com//crislin2046/jtype"
-  },
   "keywords": [
     "javascript",
     "type-system",
     "jtype",
     "dosy"
   ],
-  "author": "@dosy",
   "license": "MIT",
-  "dependencies": {
-    "esm": "^3.0.74"
-  }
+  "main": "index.js",
+  "name": "jtype-system",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com//crislin2046/jtype"
+  },
+  "scripts": {
+    "test": "serve -p 8080"
+  },
+  "version": "1.0.4"
 }
