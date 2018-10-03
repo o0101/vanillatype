@@ -36,7 +36,7 @@
     guardExists(type);
     let typeName = type.name;
 
-    const {spec,kind,verify} = typeCache.get(typeName);
+    const {spec,kind,verify,sealed} = typeCache.get(typeName);
 
     const bigErrors = [];
 
@@ -63,7 +63,13 @@
             verified = false;
           }
         }
-        return {valid: allValid && verified, errors: bigErrors}
+        let sealValid = true;
+        if ( !!sealed ) {
+          const all_key_paths = allKeyPaths(instance).sort().join(',');
+          const type_key_paths = Object.keys(spec).sort().join(',');
+          sealValid  = all_key_paths == type_key_paths;
+        }
+        return {valid: allValid && verified && sealValid, errors: bigErrors}
       } case "defCollection": {
         const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
         bigErrors.push(...containerErrors);
@@ -139,6 +145,11 @@
 
   function guardRedefinition(name) {
     if ( exists(name) ) throw {error: `Type ${name} cannot be redefined.`};
+  }
+
+  function allKeyPaths(object) {
+    // how to do this?
+    return [];
   }
 
   function defOption(type) {
