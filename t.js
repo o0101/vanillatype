@@ -148,8 +148,35 @@
   }
 
   function allKeyPaths(object) {
+    const keyPaths = new Set();
+    return recurseObject(o, keyPaths);
+
     // how to do this?
-    return [];
+    // notes:
+      // i think we ignore any array properties for now, since unless we had some
+      // notion of 'fixed size' (which we could do via a collection type verify function)
+      // arrays can be dynamicly sized, so taking the indices as keys is not
+      // easily expressible in a representation of a type definition that we can check against
+      // so we only care about key names and object properties. 
+      // we need a stack. Or a recursive function, that takes a set as an argument
+      // also we ignore keys inherited from prototypes so this is also another limitation
+      // but probably also a desirable feature of this implementation // notion of sealed
+      // since that means that instead of having to worry about a possibly unbounded definition
+      // of other key paths inherited through prototypes of other types
+      // sealed only applies to checking the properties on this object that are set on itself. 
+
+    function recurseObject(o, keyPathSet, lastLevel = '') {
+      const levelKeys = Object.getOwnPropertyKeys(o); 
+      const levelKeyPaths = levelKeys.map( k => lastLevel + k );
+      levelKeyPaths.forEach(kp => keyPathSet.add(kp));
+      for ( const k of levelKeys ) {
+        const v = o[k];
+        if ( typeof v == "object" && ! Array.isArray(v) ) {
+          recurseObject(v, lastLevel+k, keyPathSet);
+        }
+      }
+      return [...keyPathSet];
+    }
   }
 
   function defOption(type) {
