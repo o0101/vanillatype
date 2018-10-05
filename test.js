@@ -83,3 +83,14 @@
   const result9 = T.validate(T`OptionalKeyList`, gappy_keys);
 
   console.log({result7, result8,result9});
+
+  T.def(`StrictContact`, {
+    name: T`String`,
+    mobile: T`Number`,
+    email: T`String`
+  }, {sealed:true});
+
+  const result10 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com'});
+  const result11 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com', new:true});
+
+  console.log({result10,result11});

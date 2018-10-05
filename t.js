@@ -147,7 +147,7 @@
     if ( exists(name) ) throw {error: `Type ${name} cannot be redefined.`};
   }
 
-  function allKeyPaths(object) {
+  function allKeyPaths(o) {
     const keyPaths = new Set();
     return recurseObject(o, keyPaths);
 
@@ -166,7 +166,7 @@
       // sealed only applies to checking the properties on this object that are set on itself. 
 
     function recurseObject(o, keyPathSet, lastLevel = '') {
-      const levelKeys = Object.getOwnPropertyKeys(o); 
+      const levelKeys = Object.getOwnPropertyNames(o); 
       const levelKeyPaths = levelKeys.map( k => lastLevel + k );
       levelKeyPaths.forEach(kp => keyPathSet.add(kp));
       for ( const k of levelKeys ) {
@@ -187,13 +187,13 @@
 
   function verify(...args) { return check(...args); }
 
-  function defCollection(name, {container, member}, {verify} = {}) {
+  function defCollection(name, {container, member}, {sealed,verify} = {}) {
     if ( !name ) throw {error:`Type must be named.`}; 
     if ( !container || !member ) throw {error:`Type must be specified.`};
     guardRedefinition(name);
 
     const kind = 'defCollection';
-    const spec = {kind, spec: { container, member}, verify};
+    const spec = {kind, spec: { container, member}, verify, sealed};
     typeCache.set(name, spec);
     return new Type(name);
   }
@@ -219,12 +219,12 @@
     return `${this.name} Type`;
   };
 
-  function def(name, spec, {verify} = {}) {
+  function def(name, spec, {verify, sealed} = {}) {
     if ( !name ) throw {error:`Type must be named.`}; 
     guardRedefinition(name);
 
     const kind = 'def';
-    typeCache.set(name, {spec,kind,verify});
+    typeCache.set(name, {spec,kind,verify, sealed});
     return new Type(name);
   }
 
