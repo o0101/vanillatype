@@ -240,7 +240,8 @@
   function guard(type, instance) {
     guardType(type);
     guardExists(type);
-    if ( ! verify(type, instance) ) throw {error: `Type ${typeName} requested, but item is not of that type.`};
+    const {valid, errors} = validate(type, instance);
+    if ( ! valid ) throw {error: `Type ${type} requested, but item is not of that type: ${errors.join(', ')}`};
   }
 
   function guardType(t) {
