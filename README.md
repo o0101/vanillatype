@@ -1,4 +1,4 @@
-# jtype (1.0.6)
+# jtype (1.0.8)
 
 Rudimentary type system for JavaScript.
 
