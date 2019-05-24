@@ -249,7 +249,8 @@
   }
 
   function guardExists(t) {
-    if ( ! exists(t.name) ) throw {error:`Type must exist. Type ${t.name} has not been defined.`};
+    const name = originalName(t);
+    if ( ! exists(name) ) throw {error:`Type must exist. Type ${name} has not been defined.`};
   }
 
   function errors(...args) {
@@ -257,8 +258,8 @@
   }
 
   function mapBuiltins() {
-    BuiltIns.forEach(t => def(t.name, null, {verify: i => i.constructor.name === t.name}));  
-    BuiltIns.forEach(t => defSub(T`${t.name}`, null, {verify: i => i instanceof t}));  
+    BuiltIns.forEach(t => def(originalName(t), null, {verify: i => originalName(i.constructor) === originalName(t)}));  
+    BuiltIns.forEach(t => defSub(T`${originalName(t)}`, null, {verify: i => i instanceof t}));  
   }
 
   function defineSpecials() {
@@ -273,5 +274,9 @@
 
   function isUnset(i) {
     return i === null || i === undefined;
+  }
+
+  function originalName(t) {
+    return (!!t && t.name) || Object.prototype.toString.call(t).replace(/\[object |\]/g, '');
   }
 
