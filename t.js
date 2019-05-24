@@ -27,7 +27,7 @@
   export function T(parts, ...vals) {
     const cooked = vals.reduce((prev,cur,i) => prev+cur+parts[i+1], parts[0]);
     const typeName = cooked;
-    if ( !typeCache.has(typeName) ) throw {error:`Cannot use type ${typeName} before it is defined.`};
+    if ( !typeCache.has(typeName) ) throw new TypeError(`Cannot use type ${typeName} before it is defined.`);
     return new Type(typeName);
   }
 
@@ -92,7 +92,7 @@
         }
         return {valid:containerValid && membersValid && verified, errors:bigErrors};
       } default: {
-        throw {error: `Checking for type kind ${kind} is not yet implemented.`}
+        throw new TypeError(`Checking for type kind ${kind} is not yet implemented.`);
       }
     }
   }
@@ -102,9 +102,10 @@
   }
 
   function lookup(obj, keyPath) {
-    if ( isNone(obj) ) throw {error:`Lookup requires a non-unset object.`};
+    if ( isNone(obj) ) throw new TypeError(`Lookup requires a non-unset object.`);
 
-    if ( !keyPath ) throw {error: `keyPath must not be empty`};
+    if ( !keyPath ) throw new TypeError(`keyPath must not be empty`);
+
 
     const keys = keyPath.split(/\./g);
     const pathComplete = [];
@@ -144,7 +145,7 @@
   }
 
   function guardRedefinition(name) {
-    if ( exists(name) ) throw {error: `Type ${name} cannot be redefined.`};
+    if ( exists(name) ) throw new TypeError(`Type ${name} cannot be redefined.`);
   }
 
   function allKeyPaths(o) {
@@ -188,8 +189,8 @@
   function verify(...args) { return check(...args); }
 
   function defCollection(name, {container, member}, {sealed,verify} = {}) {
-    if ( !name ) throw {error:`Type must be named.`}; 
-    if ( !container || !member ) throw {error:`Type must be specified.`};
+    if ( !name ) throw new TypeError(`Type must be named.`); 
+    if ( !container || !member ) throw new TypeError(`Type must be specified.`);
     guardRedefinition(name);
 
     const kind = 'defCollection';
@@ -199,8 +200,8 @@
   }
 
   function defTuple(name, {pattern}) {
-    if ( !name ) throw {error:`Type must be named.`}; 
-    if ( !pattern ) throw {error:`Type must be specified.`};
+    if ( !name ) throw new TypeError(`Type must be named.`); 
+    if ( !pattern ) throw new TypeError(`Type must be specified.`);
     const kind = 'def';
     const specObj = {};
     pattern.forEach((type,key) => specObj[key] = type);
@@ -210,7 +211,7 @@
   }
 
   function Type(name, mods = {}) {
-    if ( ! new.target ) throw {error:`Type with new only.`};
+    if ( ! new.target ) throw new TypeError(`Type with new only.`);
     Object.defineProperty(this,'name', {get: () => name});
     this.typeName = name;
   }
@@ -220,7 +221,7 @@
   };
 
   function def(name, spec, {verify, sealed} = {}) {
-    if ( !name ) throw {error:`Type must be named.`}; 
+    if ( !name ) throw new TypeError(`Type must be named.`); 
     guardRedefinition(name);
 
     const kind = 'def';
@@ -230,7 +231,7 @@
 
   function or(...types) { // anonymous standin for defOr
     // could we do this with `name|name2|...` etc ?  we have to sort names so probably can
-    throw {error: `Or is not implemented yet.`};
+    throw new TypeError(`Or is not implemented yet.`);
   }
 
   function defOr(name, ...types) {
@@ -241,16 +242,16 @@
     guardType(type);
     guardExists(type);
     const {valid, errors} = validate(type, instance);
-    if ( ! valid ) throw {error: `Type ${type} requested, but item is not of that type: ${errors.join(', ')}`};
+    if ( ! valid ) throw new TypeError(`Type ${type} requested, but item is not of that type: ${errors.join(', ')}`);
   }
 
   function guardType(t) {
-    if ( !(t instanceof Type) ) throw {error: `Type must be a valid Type object.`};
+    if ( !(t instanceof Type) ) throw new TypeError(`Type must be a valid Type object.`);
   }
 
   function guardExists(t) {
     const name = originalName(t);
-    if ( ! exists(name) ) throw {error:`Type must exist. Type ${name} has not been defined.`};
+    if ( ! exists(name) ) throw new TypeError(`Type must exist. Type ${name} has not been defined.`);
   }
 
   function errors(...args) {
@@ -277,6 +278,13 @@
   }
 
   function originalName(t) {
-    return (!!t && t.name) || Object.prototype.toString.call(t).replace(/\[object |\]/g, '');
+    if (!!t && t.name) {
+      return t.name;
+    } 
+    const oName = Object.prototype.toString.call(t).replace(/\[object |\]/g, '');
+    if ( oName.endsWith('Constructor') ) {
+      return oName.replace(/Constructor$/,'');
+    }
+    return oName;
   }
 
