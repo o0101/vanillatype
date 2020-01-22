@@ -1,4 +1,4 @@
-# jtype (1.1.1)
+# jtype (1.1.1) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
 
 Simple type-checking system for JavaScript at runtime.
 
