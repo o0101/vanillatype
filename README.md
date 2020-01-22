@@ -1,8 +1,6 @@
 # jtype (1.1.1)
 
-Rudimentary type system for JavaScript.
-
-Vote Now [Show HN](https://news.ycombinator.com/item?id=17723268)
+Simple type-checking system for JavaScript at runtime.
 
 ## getting and incorporating
 
