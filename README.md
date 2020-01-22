@@ -1,4 +1,4 @@
-# :balance_scale: [jtype](https://github.com/crislin2046/jtype-system) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
+# :balance_scale: [jtype-system](https://github.com/crislin2046/jtype-system) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
 
 Simple type-checking system for JavaScript at runtime.
 
