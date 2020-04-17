@@ -294,7 +294,7 @@
 
     const kind = 'def';
     if ( sealed === undefined ) {
-      sealed = true;
+      //sealed = true;
     }
     typeCache.set(name, {spec,kind,verify,sealed,types,native});
     return new Type(name, {types});
