@@ -36,7 +36,7 @@
     guardExists(type);
     let typeName = type.name;
 
-    const {spec,kind,verify,sealed} = typeCache.get(typeName);
+    const {spec,kind,verify,sealed,native} = typeCache.get(typeName);
 
     const bigErrors = [];
 
@@ -46,7 +46,7 @@
         if ( !! spec ) {
           const keyPaths = Object.keys(spec);
           allValid = !isNone(instance) && keyPaths.every(kp => {
-            const {resolved, errors:lookupErrors} = lookup(instance,kp);
+            const {resolved, errors:lookupErrors} = lookup(instance,kp,!checkTypeMatch(spec[kp], T`None`));
             bigErrors.push(...lookupErrors);
             if ( lookupErrors.length ) return false;
             const {valid, errors: validationErrors} = validate(spec[kp], resolved);
@@ -64,10 +64,24 @@
           }
         }
         let sealValid = true;
-        if ( !!sealed ) {
-          const all_key_paths = allKeyPaths(instance).sort().join(',');
-          const type_key_paths = Object.keys(spec).sort().join(',');
-          sealValid  = all_key_paths == type_key_paths;
+        if ( !!sealed && !! spec ) {
+          const all_key_paths = allKeyPaths(instance).sort();
+          const type_key_paths = Object.keys(spec).sort();
+          sealValid  = all_key_paths.join(',') == type_key_paths.join(',');
+          if ( ! sealValid ) {
+            const errorKeys = [];
+            const tkp = new Set(type_key_paths); 
+            for( const k of all_key_paths ) {
+              if ( ! tkp.has(k) ) {
+                errorKeys.push({
+                  error: `Key path '${k}' is not in the spec for type ${typeName}`
+                });
+              }
+            }
+            if ( errorKeys.length ) {
+              bigErrors.push(...errorKeys);
+            }
+          }
         }
         return {valid: allValid && verified && sealValid, errors: bigErrors}
       } case "defCollection": {
@@ -101,7 +115,7 @@
     return validate(...args).valid;
   }
 
-  function lookup(obj, keyPath) {
+  function lookup(obj, keyPath, cannotBeNone) {
     if ( isNone(obj) ) throw new TypeError(`Lookup requires a non-unset object.`);
 
     if ( !keyPath ) throw new TypeError(`keyPath must not be empty`);
@@ -117,13 +131,43 @@
       const nextKey = keys.shift();
       resolved = resolved[nextKey];
       pathComplete.push(nextKey);
-      if ( keys.length && resolved == null || resolved == undefined ) {
-        errors.push( { error: `Lookup on key path ${keyPath} failed at ${pathComplete.join('.')}
-          when null or undefined was found.` });
+      if ( cannotBeNone && (resolved == null || resolved == undefined) ) {
+        errors.push({
+          error: 
+            `Lookup on key path ${keyPath} failed at ` + 
+            pathComplete.join('.') +
+            `when null or undefined was found.` 
+        });
         break;
       }
     }
     return {resolved,errors};
+  }
+
+  function checkTypeMatch(typeA, typeB) {
+    guardType(typeA);
+    guardExists(typeA);
+    guardType(typeB);
+    guardExists(typeB);
+
+    if ( typeA === typeB ) {
+      return true;
+    } else if ( typeA.isSumType && typeA.types.has(typeB) ) {
+      return true;
+    } else if ( typeB.isSumType && typeB.types.has(typeA) ) {
+      return true;
+    } else if ( typeA.name.startsWith('?') && typeB == T`None` ) {
+      return true;
+    } else if ( typeB.name.startsWith('?') && typeA == T`None` ) {
+      return true;
+    }
+
+    if ( typeA.name.startsWith('>') || typeB.name.startsWith('>') ) {
+      //throw new Error(`Check type match has not been implemented for derived//sub types yet.`);
+
+    }
+
+    return false;
   }
 
   function option(type) {
@@ -137,6 +181,13 @@
   function defSub(type, spec, {verify} = {}) {
     guardType(type);
     guardExists(type);
+
+    if ( ! verify ) {
+      verify = () => true;
+    } 
+
+    verify = type.native ? i => i instanceof type.native.constructor && verify(i) : verify;
+
     return def(`>${type.name}`, spec, {verify});
   }
 
@@ -150,7 +201,7 @@
 
   function allKeyPaths(o) {
     const keyPaths = new Set();
-    return recurseObject(o, keyPaths);
+    return recurseObject(o, keyPaths, '');
 
     // how to do this?
     // notes:
@@ -168,12 +219,12 @@
 
     function recurseObject(o, keyPathSet, lastLevel = '') {
       const levelKeys = Object.getOwnPropertyNames(o); 
-      const levelKeyPaths = levelKeys.map( k => lastLevel + k );
+      const levelKeyPaths = levelKeys.map( k => lastLevel + (lastLevel.length ? '.' : '') + k );
       levelKeyPaths.forEach(kp => keyPathSet.add(kp));
       for ( const k of levelKeys ) {
         const v = o[k];
         if ( typeof v == "object" && ! Array.isArray(v) ) {
-          recurseObject(v, lastLevel+k, keyPathSet);
+          recurseObject(v, keyPathSet, lastLevel + (lastLevel.length ? '.' : '') +k);
         }
       }
       return [...keyPathSet];
@@ -214,19 +265,39 @@
     if ( ! new.target ) throw new TypeError(`Type with new only.`);
     Object.defineProperty(this,'name', {get: () => name});
     this.typeName = name;
+
+    if ( mods.types ) {
+      const {types} = mods;
+      const typeSet = new Set(types);
+      Object.defineProperty(this,'isSumType', {get: () => true});
+      Object.defineProperty(this,'types', {get: () => typeSet});
+    }
   }
 
   Type.prototype.toString = function () {
     return `${this.name} Type`;
   };
 
-  function def(name, spec, {verify, sealed} = {}) {
+  function def(name, spec, {verify, sealed, types, native} = {}) {
     if ( !name ) throw new TypeError(`Type must be named.`); 
     guardRedefinition(name);
 
+    if ( name.startsWith('?') ) {
+      if ( !! spec ) {
+        throw new TypeError(`Option type can not have a spec.`);
+      } 
+
+      if ( ! verify(null) ) {
+        throw new TypeError(`Option type must be OK to be unset.`);
+      }
+    }
+
     const kind = 'def';
-    typeCache.set(name, {spec,kind,verify, sealed});
-    return new Type(name);
+    if ( sealed === undefined ) {
+      sealed = true;
+    }
+    typeCache.set(name, {spec,kind,verify,sealed,types,native});
+    return new Type(name, {types});
   }
 
   function or(...types) { // anonymous standin for defOr
@@ -235,7 +306,7 @@
   }
 
   function defOr(name, ...types) {
-    return T.def(name, null, {verify: i => types.some(t => check(t,i))});
+    return T.def(name, null, {types, verify: i => types.some(t => check(t,i))});
   }
 
   function guard(type, instance) {
@@ -259,8 +330,8 @@
   }
 
   function mapBuiltins() {
-    BuiltIns.forEach(t => def(originalName(t), null, {verify: i => originalName(i.constructor) === originalName(t)}));  
-    BuiltIns.forEach(t => defSub(T`${originalName(t)}`, null, {verify: i => i instanceof t}));  
+    BuiltIns.forEach(t => def(originalName(t), null, {native: t, verify: i => originalName(i.constructor) === originalName(t)}));  
+    BuiltIns.forEach(t => defSub(T`${originalName(t)}`));  
   }
 
   function defineSpecials() {
