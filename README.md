@@ -112,6 +112,8 @@ Type object as first argument, rather than a String name. I might change that in
 
 ## faq - why not just TypeScript?
 
+Because I say it sucks. And so it does.
+
 Why add transpilation and a tool chain, and change your code, and add a whole bunch of assumptions, 
 when you can write a rudimentary type system in JS in a couple hundred lines.
 
