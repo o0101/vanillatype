@@ -28,7 +28,7 @@
     const cooked = vals.reduce((prev,cur,i) => prev+cur+parts[i+1], parts[0]);
     const typeName = cooked;
     if ( !typeCache.has(typeName) ) throw new TypeError(`Cannot use type ${typeName} before it is defined.`);
-    return new Type(typeName);
+    return typeCache.get(typeName).type;
   }
 
   function validate(type, instance) {
@@ -36,7 +36,7 @@
     guardExists(type);
     let typeName = type.name;
 
-    const {spec,kind,verify,sealed,native} = typeCache.get(typeName);
+    const {spec,kind,verify,verifiers,sealed,native} = typeCache.get(typeName);
 
     const bigErrors = [];
 
@@ -44,12 +44,12 @@
       case "def": {
         let allValid = true;
         if ( !! spec ) {
-          const keyPaths = Object.keys(spec);
+          const keyPaths = allKeyPaths(spec);
           allValid = !isNone(instance) && keyPaths.every(kp => {
-            const {resolved, errors:lookupErrors} = lookup(instance,kp,!checkTypeMatch(spec[kp], T`None`));
+            const {resolved, errors:lookupErrors} = lookup(instance,kp,() => !checkTypeMatch(lookup(spec,kp).resolved, T`None`));
             bigErrors.push(...lookupErrors);
             if ( lookupErrors.length ) return false;
-            const {valid, errors: validationErrors} = validate(spec[kp], resolved);
+            const {valid, errors: validationErrors} = validate(lookup(spec,kp).resolved, resolved);
             bigErrors.push(...validationErrors);
             return valid;
           });
@@ -58,6 +58,21 @@
         if ( !!verify ) {
           try {
             verified = verify(instance);
+            if ( ! verified ) {
+              if ( verifiers ) {
+                throw {
+                  error:`Value '${instance}' violated at least 1 verify function in:\n${
+                    verifiers.map(f => '\t'+f.toString()).join('\n')
+                  }`
+                };
+              } else if ( type.isSumType ) {
+                throw {
+                  error: `Value '${instance}' did not match any of: ${[...type.types.keys()].map(t => t.name)}`
+                }
+              } else {
+                throw {error:`Value '${instance}' violated verify function in: ${verify.toString()}`};
+              }
+            }
           } catch(e) {
             bigErrors.push(e);
             verified = false;
@@ -66,7 +81,7 @@
         let sealValid = true;
         if ( !!sealed && !! spec ) {
           const all_key_paths = allKeyPaths(instance).sort();
-          const type_key_paths = Object.keys(spec).sort();
+          const type_key_paths = allKeyPaths(spec).sort();
           sealValid  = all_key_paths.join(',') == type_key_paths.join(',');
           if ( ! sealValid ) {
             const errorKeys = [];
@@ -131,13 +146,22 @@
       const nextKey = keys.shift();
       resolved = resolved[nextKey];
       pathComplete.push(nextKey);
-      if ( cannotBeNone && (resolved == null || resolved == undefined) ) {
-        errors.push({
-          error: 
-            `Lookup on key path ${keyPath} failed at ` + 
-            pathComplete.join('.') +
-            `when null or undefined was found.` 
-        });
+      if ( (resolved === null || resolved === undefined) ) {
+        if ( keys.length ) {
+          errors.push({
+            error: 
+              `Lookup on key path '${keyPath}' failed at '` + 
+              pathComplete.join('.') +
+              `' when ${resolved} was found at '${nextKey}'.` 
+          });
+        } else if ( !!cannotBeNone && cannotBeNone() ) {
+          errors.push({
+            error: 
+              `Resolution on key path '${keyPath}' failed` + 
+              `when ${resolved} was found at '${nextKey}' and the Type of this` +
+              `key's value cannot be None.`
+          });
+        }
         break;
       }
     }
@@ -186,7 +210,11 @@
       verify = () => true;
     } 
 
-    verify = type.native ? i => i instanceof type.native.constructor && verify(i) : verify;
+    if ( type.native ) {
+      spec.verifiers = [ verify ];
+      verify = i => i instanceof type.native.constructor && verify(i);
+      spec.verifiers.push(verify);
+    }
 
     return def(`>${type.name}`, spec, {verify});
   }
@@ -219,14 +247,18 @@
 
     function recurseObject(o, keyPathSet, lastLevel = '') {
       const levelKeys = Object.getOwnPropertyNames(o); 
-      const levelKeyPaths = levelKeys.map( k => lastLevel + (lastLevel.length ? '.' : '') + k );
-      levelKeyPaths.forEach(kp => keyPathSet.add(kp));
-      for ( const k of levelKeys ) {
+      const keyPaths = levelKeys
+        .map(k => lastLevel + (lastLevel.length ? '.' : '') + k)
+      levelKeys.forEach((k,i) => {
         const v = o[k];
-        if ( typeof v == "object" && ! Array.isArray(v) ) {
+        if ( v instanceof Type ) {
+          keyPathSet.add(keyPaths[i]);
+        } else if ( typeof v == "object" && ! Array.isArray(v) ) {
           recurseObject(v, keyPathSet, lastLevel + (lastLevel.length ? '.' : '') +k);
+        } else {
+          keyPathSet.add(keyPaths[i]);
         }
-      }
+      });
       return [...keyPathSet];
     }
   }
@@ -245,9 +277,10 @@
     guardRedefinition(name);
 
     const kind = 'defCollection';
-    const spec = {kind, spec: { container, member}, verify, sealed};
+    const t = new Type(name);
+    const spec = {kind, spec: { container, member}, verify, sealed, type: t};
     typeCache.set(name, spec);
-    return new Type(name);
+    return t;
   }
 
   function defTuple(name, {pattern}) {
@@ -256,9 +289,10 @@
     const kind = 'def';
     const specObj = {};
     pattern.forEach((type,key) => specObj[key] = type);
-    const spec = {kind, spec: specObj};
+    const t = new Type(name);
+    const spec = {kind, spec: specObj, type:t};
     typeCache.set(name, spec);
-    return new Type(name);
+    return t;
   }
 
   function Type(name, mods = {}) {
@@ -272,13 +306,14 @@
       Object.defineProperty(this,'isSumType', {get: () => true});
       Object.defineProperty(this,'types', {get: () => typeSet});
     }
+    
   }
 
   Type.prototype.toString = function () {
     return `${this.name} Type`;
   };
 
-  function def(name, spec, {verify, sealed, types, native} = {}) {
+  function def(name, spec, {verify, sealed, types, verifiers, native} = {}) {
     if ( !name ) throw new TypeError(`Type must be named.`); 
     guardRedefinition(name);
 
@@ -294,10 +329,12 @@
 
     const kind = 'def';
     if ( sealed === undefined ) {
-      //sealed = true;
+      sealed = true;
     }
-    typeCache.set(name, {spec,kind,verify,sealed,types,native});
-    return new Type(name, {types});
+    const t = new Type(name, {types});
+    const cache = {spec,kind,verify,verifiers,sealed,types,native,type:t};
+    typeCache.set(name, cache);
+    return t;
   }
 
   function or(...types) { // anonymous standin for defOr
@@ -317,6 +354,7 @@
   }
 
   function guardType(t) {
+    //console.log(t);
     if ( !(t instanceof Type) ) throw new TypeError(`Type must be a valid Type object.`);
   }
 

@@ -6,7 +6,7 @@
   Object.assign(self, {T});
 
   T.def('Cris', {
-    ['a.b.c']: T`String`
+    a: { b: { c: T`String` }}
   });
 
   const result1 = T.validate(T`Cris`, {a:1});
