@@ -17,7 +17,11 @@
 
   const typeCache = new Map();
 
-  Object.assign(T, {check, sub, verify, validate, def, defSub, defTuple, defCollection, defOr, option, defOption, or, guard, errors});
+  Object.assign(T, {
+    check, sub, verify, validate, 
+    def, defSub, defTuple, defCollection, defOr, option, defOption, maybe, or, 
+    guard, errors
+  });
   
   T[Symbol.for('jtype-system.typeCache')] = typeCache;
 
@@ -267,6 +271,15 @@
     guardType(type);
     const typeName = type.name;
     return T.def(`?${typeName}`, null, {verify: i => isUnset(i) || T.check(type,i)});
+  }
+
+  function maybe(type) {
+    try {
+      return defOption(type);
+    } catch(e) {
+      // console.log(`Option Type ${type.name} already declared.`, e);
+    }
+    return T`?${type.name}`;
   }
 
   function verify(...args) { return check(...args); }
