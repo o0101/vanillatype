@@ -43,7 +43,7 @@
   function validate(type, instance, {partial: partial = false} = {}) {
     guardType(type);
     guardExists(type);
-    let typeName = type.name;
+    const typeName = type.name;
 
     const {spec,kind,verify,verifiers,sealed,native} = typeCache.get(typeName);
 
@@ -53,15 +53,26 @@
       case "def": {
         let allValid = true;
         if ( !! spec ) {
-          const keyPaths = allKeyPaths(spec);
-          const strictness = partial ? 'some' : 'every';
-          allValid = !isNone(instance) && keyPaths[strictness](kp => {
+          const keyPaths = allKeyPaths(partial ? instance : spec);
+          allValid = !isNone(instance) && keyPaths.every(kp => {
             // Allow lookup errors if the type match for the key path can include None
+
             const {resolved, errors:lookupErrors} = lookup(instance,kp,() => !checkTypeMatch(lookup(spec,kp).resolved, T`None`));
             bigErrors.push(...lookupErrors);
+
             if ( lookupErrors.length ) return false;
-            const {valid, errors: validationErrors} = validate(lookup(spec,kp).resolved, resolved);
+
+            const keyType = lookup(spec,kp).resolved;
+            if ( !keyType || !(keyType instanceof Type) ) {
+              bigErrors.push({
+                error: `Key path '${kp}' is not present in the spec for type '${typeName}'`
+              });
+              return false;
+            }
+
+            const {valid, errors: validationErrors} = validate(keyType, resolved);
             bigErrors.push(...validationErrors);
+
             return valid;
           });
         }

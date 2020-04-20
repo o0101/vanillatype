@@ -113,3 +113,7 @@
   const result12 = T.partialMatch(T`StrictContact`, {name:'Mobile'});
   console.log({result12});
   console.assert(result12.valid);
+
+  const result13 = T.partialMatch(T`StrictContact`, {name:'Mobile', blockhead:133133});
+  console.log({result13});
+  console.assert(!result13.valid);
