@@ -11,9 +11,11 @@
 
   const result1 = T.validate(T`Cris`, {a:1});
   console.log({result1});
+  console.assert(!result1.valid);
 
   const result2 = T.validate(T`Cris`, {a:{b:{c:'asdsad'}}});
   console.log({result2});
+  console.assert(result2.valid);
 
   T.defCollection(`DOMList`, {
     container: T`>NodeList`,
@@ -23,7 +25,10 @@
   const result3 = T.validate(T`DOMList`, document.querySelectorAll('*'));
   const result4 = T.validate(T`DOMList`, document.body.childNodes);
 
-  console.log({result3,result4});
+  console.log({result3});
+  console.assert(result3.valid);
+  console.log({result4});
+  console.assert(result4.valid);
 
   T.defTuple(`TypeMapping`, {
     pattern: [T`String`, T`>Object`]
@@ -37,6 +42,7 @@
   const result5 = T.validate(T`TypeMap`, T[Symbol.for('jtype-system.typeCache')]);
 
   console.log({result5});
+  console.assert(result5.valid);
 
   const result6 = [
     T.check(T`Iterable`, []),
@@ -48,6 +54,7 @@
   ];
 
   console.log({result6});
+  console.assert(result6.join(',') == [true, true, true, true, false, false].join(','));
 
   T.defOr(`Key`, T`String`, T`Integer`);
   T.defOption(T`Key`);
@@ -79,10 +86,15 @@
   T.defCollection(`OptionalKeyList`, {container: T`Iterable`, member: T`?Key`});
 
   const result7 = T.validate(T`KeyList`, keys);
+  console.log({result7});
+  console.assert(result7.valid);
   const result8 = T.validate(T`KeyList`, not_keys);
+  console.log({result8});
+  console.assert(!result8.valid);
   const result9 = T.validate(T`OptionalKeyList`, gappy_keys);
+  console.log({result9});
+  console.assert(result9.valid);
 
-  console.log({result7, result8,result9});
 
   T.def(`StrictContact`, {
     name: T`String`,
@@ -93,4 +105,11 @@
   const result10 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com'});
   const result11 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com', new:true});
 
-  console.log({result10,result11});
+  console.log({result10});
+  console.assert(result10.valid);
+  console.log({result11});
+  console.assert(!result11.valid);
+
+  const result12 = T.partialMatch(T`StrictContact`, {name:'Mobile'});
+  console.log({result12});
+  console.assert(result12.valid);

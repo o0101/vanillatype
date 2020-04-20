@@ -19,6 +19,7 @@
 
   Object.assign(T, {
     check, sub, verify, validate, 
+    partialMatch,
     def, defSub, defTuple, defCollection, defOr, option, defOption, maybe, or, 
     guard, errors
   });
@@ -35,7 +36,11 @@
     return typeCache.get(typeName).type;
   }
 
-  function validate(type, instance) {
+  function partialMatch(type, instance) {
+    return validate(type, instance, {partial:true});
+  }
+
+  function validate(type, instance, {partial: partial = false} = {}) {
     guardType(type);
     guardExists(type);
     let typeName = type.name;
@@ -49,7 +54,9 @@
         let allValid = true;
         if ( !! spec ) {
           const keyPaths = allKeyPaths(spec);
-          allValid = !isNone(instance) && keyPaths.every(kp => {
+          const strictness = partial ? 'some' : 'every';
+          allValid = !isNone(instance) && keyPaths[strictness](kp => {
+            // Allow lookup errors if the type match for the key path can include None
             const {resolved, errors:lookupErrors} = lookup(instance,kp,() => !checkTypeMatch(lookup(spec,kp).resolved, T`None`));
             bigErrors.push(...lookupErrors);
             if ( lookupErrors.length ) return false;
@@ -59,7 +66,10 @@
           });
         }
         let verified = true;
-        if ( !!verify ) {
+        if ( partial && ! spec && !!verify ) {
+          throw new TypeError(`Type checking with option 'partial' is not a valid option for types that` + 
+            ` only use a verify function but have no spec`);
+        } else if ( !!verify ) {
           try {
             verified = verify(instance);
             if ( ! verified ) {
@@ -88,41 +98,51 @@
           const type_key_paths = allKeyPaths(spec).sort();
           sealValid  = all_key_paths.join(',') == type_key_paths.join(',');
           if ( ! sealValid ) {
-            const errorKeys = [];
-            const tkp = new Set(type_key_paths); 
-            for( const k of all_key_paths ) {
-              if ( ! tkp.has(k) ) {
-                errorKeys.push({
-                  error: `Key path '${k}' is not in the spec for type ${typeName}`
-                });
+            if ( partial && all_key_paths.length < type_key_paths.length ) {
+              sealValid = true;
+            } else {
+              const errorKeys = [];
+              const tkp = new Set(type_key_paths); 
+              for( const k of all_key_paths ) {
+                if ( ! tkp.has(k) ) {
+                  errorKeys.push({
+                    error: `Key path '${k}' is not in the spec for type ${typeName}`
+                  });
+                }
+              }
+              if ( errorKeys.length ) {
+                bigErrors.push(...errorKeys);
               }
             }
-            if ( errorKeys.length ) {
-              bigErrors.push(...errorKeys);
+          }
+        }
+        return {valid: allValid && verified && sealValid, errors: bigErrors, partial}
+      } case "defCollection": {
+        const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
+        let membersValid = true;
+        let verified = true;
+
+        bigErrors.push(...containerErrors);
+        if ( partial ) {
+          throw new TypeError(`Type checking with option 'partial' is not a valid option for Collection types`);
+        } else {
+          if ( containerValid ) {
+             membersValid= [...instance].every(member => {
+              const {valid, errors} = validate(spec.member, member);
+              bigErrors.push(...errors);
+              return valid;
+            });
+          }
+          if ( !!verify ) {
+            try {
+              verified = verify(instance);
+            } catch(e) {
+              bigErrors.push(e);
+              verified = false;
             }
           }
         }
-        return {valid: allValid && verified && sealValid, errors: bigErrors}
-      } case "defCollection": {
-        const {valid:containerValid, errors:containerErrors} = validate(spec.container, instance);
-        bigErrors.push(...containerErrors);
-        let membersValid = true;
-        if ( containerValid ) {
-           membersValid= [...instance].every(member => {
-            const {valid, errors} = validate(spec.member, member);
-            bigErrors.push(...errors);
-            return valid;
-          });
-        }
-        let verified = true;
-        if ( !!verify ) {
-          try {
-            verified = verify(instance);
-          } catch(e) {
-            bigErrors.push(e);
-            verified = false;
-          }
-        }
+          
         return {valid:containerValid && membersValid && verified, errors:bigErrors};
       } default: {
         throw new TypeError(`Checking for type kind ${kind} is not yet implemented.`);
