@@ -117,3 +117,12 @@
   const result13 = T.partialMatch(T`StrictContact`, {name:'Mobile', blockhead:133133});
   console.log({result13});
   console.assert(!result13.valid);
+
+  T.def('Err', {
+    error: T`String`,
+    status: T.defOr('MaybeInteger', T`Integer`, T`None`),
+  });
+
+  const result14 = T.validate(T`Err`, {error:'No such page'});
+  console.log({result14});
+  console.assert(result14.valid);

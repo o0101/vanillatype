@@ -57,7 +57,7 @@
           allValid = !isNone(instance) && keyPaths.every(kp => {
             // Allow lookup errors if the type match for the key path can include None
 
-            const {resolved, errors:lookupErrors} = lookup(instance,kp,() => !checkTypeMatch(lookup(spec,kp).resolved, T`None`));
+            const {resolved, errors:lookupErrors} = lookup(instance,kp,() => checkTypeMatch(lookup(spec,kp).resolved, T`None`));
             bigErrors.push(...lookupErrors);
 
             if ( lookupErrors.length ) return false;
@@ -109,7 +109,7 @@
           const type_key_paths = allKeyPaths(spec).sort();
           sealValid  = all_key_paths.join(',') == type_key_paths.join(',');
           if ( ! sealValid ) {
-            if ( partial && all_key_paths.length < type_key_paths.length ) {
+            if ( all_key_paths.length < type_key_paths.length ) {
               sealValid = true;
             } else {
               const errorKeys = [];
@@ -165,7 +165,7 @@
     return validate(...args).valid;
   }
 
-  function lookup(obj, keyPath, cannotBeNone) {
+  function lookup(obj, keyPath, canBeNone) {
     if ( isNone(obj) ) throw new TypeError(`Lookup requires a non-unset object.`);
 
     if ( !keyPath ) throw new TypeError(`keyPath must not be empty`);
@@ -189,7 +189,9 @@
               pathComplete.join('.') +
               `' when ${resolved} was found at '${nextKey}'.` 
           });
-        } else if ( !!cannotBeNone && cannotBeNone() ) {
+        } else if ( !!canBeNone && canBeNone() ) {
+          // no issues
+        } else {
           errors.push({
             error: 
               `Resolution on key path '${keyPath}' failed` + 
