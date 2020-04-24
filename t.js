@@ -86,13 +86,15 @@
             if ( ! verified ) {
               if ( verifiers ) {
                 throw {
-                  error:`Value '${instance}' violated at least 1 verify function in:\n${
+                  error:`Value '${JSON.stringify(instance)}' violated at least 1 verify function in:\n${
                     verifiers.map(f => '\t'+f.toString()).join('\n')
                   }`
                 };
               } else if ( type.isSumType ) {
+                console.warn({verify, verifiers, type, instance});
                 throw {
-                  error: `Value '${instance}' did not match any of: ${[...type.types.keys()].map(t => t.name)}`
+                  error: `Value '${JSON.stringify(instance)}' did not match any of: ${[...type.types.keys()].map(t => t.name)}`,
+                  verify, verifiers
                 }
               } else {
                 throw {error:`Value '${instance}' violated verify function in: ${verify.toString()}`};
