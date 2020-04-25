@@ -11,7 +11,7 @@
       FileList, Text, Document, DocumentFragment,
       Error, File, Event, EventTarget, URL
     ] : [ Buffer ])
-  ];
+  ]
 
   const isNone = instance => instance == null || instance == undefined;
 
@@ -47,13 +47,16 @@
 
     const {spec,kind,verify,verifiers,sealed,native} = typeCache.get(typeName);
 
+    const specKeyPaths = spec ? allKeyPaths(spec).sort() : [];
+    const specKeyPathSet = new Set(specKeyPaths);
+
     const bigErrors = [];
 
     switch(kind) {
       case "def": {
         let allValid = true;
         if ( !! spec ) {
-          const keyPaths = allKeyPaths(partial ? instance : spec);
+          const keyPaths = partial ? allKeyPaths(instance, specKeyPathSet) : specKeyPaths;
           allValid = !isNone(instance) && keyPaths.every(kp => {
             // Allow lookup errors if the type match for the key path can include None
 
@@ -91,7 +94,6 @@
                   }`
                 };
               } else if ( type.isSumType ) {
-                console.warn({verify, verifiers, type, instance});
                 throw {
                   error: `Value '${JSON.stringify(instance)}' did not match any of: ${[...type.types.keys()].map(t => t.name)}`,
                   verify, verifiers
@@ -107,8 +109,8 @@
         }
         let sealValid = true;
         if ( !!sealed && !! spec ) {
-          const all_key_paths = allKeyPaths(instance).sort();
-          const type_key_paths = allKeyPaths(spec).sort();
+          const type_key_paths = specKeyPaths;
+          const all_key_paths = allKeyPaths(instance, specKeyPathSet).sort();
           sealValid  = all_key_paths.join(',') == type_key_paths.join(',');
           if ( ! sealValid ) {
             if ( all_key_paths.length < type_key_paths.length ) {
@@ -266,23 +268,10 @@
     if ( exists(name) ) throw new TypeError(`Type ${name} cannot be redefined.`);
   }
 
-  function allKeyPaths(o) {
+  function allKeyPaths(o, specKeyPaths) {
+    const isTypeSpec = ! specKeyPaths;
     const keyPaths = new Set();
     return recurseObject(o, keyPaths, '');
-
-    // how to do this?
-    // notes:
-      // i think we ignore any array properties for now, since unless we had some
-      // notion of 'fixed size' (which we could do via a collection type verify function)
-      // arrays can be dynamicly sized, so taking the indices as keys is not
-      // easily expressible in a representation of a type definition that we can check against
-      // so we only care about key names and object properties. 
-      // we need a stack. Or a recursive function, that takes a set as an argument
-      // also we ignore keys inherited from prototypes so this is also another limitation
-      // but probably also a desirable feature of this implementation // notion of sealed
-      // since that means that instead of having to worry about a possibly unbounded definition
-      // of other key paths inherited through prototypes of other types
-      // sealed only applies to checking the properties on this object that are set on itself. 
 
     function recurseObject(o, keyPathSet, lastLevel = '') {
       const levelKeys = Object.getOwnPropertyNames(o); 
@@ -290,12 +279,31 @@
         .map(k => lastLevel + (lastLevel.length ? '.' : '') + k)
       levelKeys.forEach((k,i) => {
         const v = o[k];
-        if ( v instanceof Type ) {
-          keyPathSet.add(keyPaths[i]);
-        } else if ( typeof v == "object" && ! Array.isArray(v) ) {
-          recurseObject(v, keyPathSet, lastLevel + (lastLevel.length ? '.' : '') +k);
+        if ( isTypeSpec ) {
+          if ( v instanceof Type ) {
+            keyPathSet.add(keyPaths[i]);
+          } else if ( typeof v == "object" ) {
+            if ( ! Array.isArray(v) ) {
+              recurseObject(v, keyPathSet, keyPaths[i]);
+            } else {
+              throw new TypeError(`We don't support Types that use Arrays as structure, just yet.`); 
+            }
+          } else {
+            throw new TypeError(`Spec cannot contain leaf values that are not valid Types`);
+          }
         } else {
-          keyPathSet.add(keyPaths[i]);
+          if ( specKeyPaths.has(keyPaths[i]) ) {
+            keyPathSet.add(keyPaths[i]); 
+          } else if ( typeof v == "object" ) {
+            if ( ! Array.isArray(v) ) {
+              recurseObject(v, keyPathSet, keyPaths[i]);
+            } else {
+              throw new TypeError(`We don't support Instances that use Arrays as structure, just yet.`); 
+            }
+          } else {
+            //console.warn("Spec has no such key",  keyPaths[i]);
+            keyPathSet.add(keyPaths[i]);
+          }
         }
       });
       return [...keyPathSet];

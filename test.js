@@ -126,3 +126,15 @@
   const result14 = T.validate(T`Err`, {error:'No such page'});
   console.log({result14});
   console.assert(result14.valid);
+
+  T.def('Session', {
+    id: T`String`
+  });
+
+  T.def('WrappedSession', {
+    session: T`Session`
+  });
+
+  const result15 = T.validate(T`WrappedSession`, { session: {id : 'OK' }});
+  console.log({result15});
+  console.assert(result15.valid);
