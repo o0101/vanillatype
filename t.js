@@ -45,7 +45,7 @@
     guardExists(type);
     const typeName = type.name;
 
-    const {spec,kind,verify,verifiers,sealed,native} = typeCache.get(typeName);
+    const {spec,kind,help,verify,verifiers,sealed,native} = typeCache.get(typeName);
 
     const specKeyPaths = spec ? allKeyPaths(spec).sort() : [];
     const specKeyPathSet = new Set(specKeyPaths);
@@ -90,7 +90,7 @@
               if ( verifiers ) {
                 throw {
                   error:`Value '${JSON.stringify(instance)}' violated at least 1 verify function in:\n${
-                    verifiers.map(f => '\t'+f.toString()).join('\n')
+                    verifiers.map(f => '\t'+(f.help||'') + ' ('+f.verify.toString()+')').join('\n')
                   }`
                 };
               } else if ( type.isSumType ) {
@@ -99,7 +99,11 @@
                   verify, verifiers
                 }
               } else {
-                throw {error:`Value '${instance}' violated verify function in: ${verify.toString()}`};
+                let helpMsg = '';
+                if ( help ) {
+                  helpMsg = `Help: ${help}. `;
+                }
+                throw {error:`${helpMsg}Value '${instance}' violated verify function in: ${verify.toString()}`};
               }
             }
           } catch(e) {
@@ -243,7 +247,7 @@
     return T`>${type.name}`;
   }
 
-  function defSub(type, spec, {verify} = {}) {
+  function defSub(type, spec, {verify, help} = {}) {
     guardType(type);
     guardExists(type);
 
@@ -252,12 +256,13 @@
     } 
 
     if ( type.native ) {
-      spec.verifiers = [ verify ];
+      spec.verifiers = [ {help,verify} ];
       verify = i => i instanceof type.native.constructor && verify(i);
-      spec.verifiers.push(verify);
+      const helpMsg = `Needs to be of type ${type.native.constructor.name}. ${help||''}`;
+      spec.verifiers.push({help:helpMsg,verify});
     }
 
-    return def(`>${type.name}`, spec, {verify});
+    return def(`>${type.name}`, spec, {verify,help});
   }
 
   function exists(name) {
@@ -369,7 +374,7 @@
     return `${this.name} Type`;
   };
 
-  function def(name, spec, {verify, sealed, types, verifiers, native} = {}) {
+  function def(name, spec, {help, verify, sealed, types, verifiers, native} = {}) {
     if ( !name ) throw new TypeError(`Type must be named.`); 
     guardRedefinition(name);
 
@@ -388,7 +393,7 @@
       sealed = true;
     }
     const t = new Type(name, {types});
-    const cache = {spec,kind,verify,verifiers,sealed,types,native,type:t};
+    const cache = {spec,kind,help,verify,verifiers,sealed,types,native,type:t};
     typeCache.set(name, cache);
     return t;
   }
