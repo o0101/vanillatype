@@ -89,7 +89,7 @@
             if ( ! verified ) {
               if ( verifiers ) {
                 throw {
-                  error:`Value '${JSON.stringify(instance)}' violated at least 1 verify function in:\n${
+                  error:`Type ${typeName} value '${JSON.stringify(instance)}' violated at least 1 verify function in:\n${
                     verifiers.map(f => '\t'+(f.help||'') + ' ('+f.verify.toString()+')').join('\n')
                   }`
                 };
@@ -103,7 +103,7 @@
                 if ( help ) {
                   helpMsg = `Help: ${help}. `;
                 }
-                throw {error:`${helpMsg}Value '${instance}' violated verify function in: ${verify.toString()}`};
+                throw {error:`${helpMsg}Type ${typeName} Value '${JSON.stringify(instance)}' violated verify function in: ${verify.toString()}`};
               }
             }
           } catch(e) {
