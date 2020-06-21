@@ -1,31 +1,4 @@
 {
-  "_from": "jtype-system",
-  "_id": "jtype-system@1.0.6",
-  "_inBundle": false,
-  "_integrity": "sha512-bZ8xwfrhjGgnOTJ7SWk0J+Wm/2/qMmrGF3Rg8eXP+1Ld2cQiH0DiAEFGNEsxrOkfgAOGq2nR2uFYZsTfnQRUeg==",
-  "_location": "/jtype-system",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "tag",
-    "registry": true,
-    "raw": "jtype-system",
-    "name": "jtype-system",
-    "escapedName": "jtype-system",
-    "rawSpec": "",
-    "saveSpec": null,
-    "fetchSpec": "latest"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/",
-    "/brutalist-web",
-    "/brutestrap",
-    "/maskingtape.css"
-  ],
-  "_resolved": "https://registry.npmjs.org/jtype-system/-/jtype-system-1.0.6.tgz",
-  "_shasum": "65bf313573ddeee1033c055890ee7bebb465bd7a",
-  "_spec": "jtype-system",
-  "_where": "/home/cris7fe/basic-login-flow",
   "author": {
     "name": "@dosy"
   },
@@ -49,7 +22,16 @@
     "url": "https://github.com//crislin2046/jtype"
   },
   "scripts": {
-    "test": "serve -p 8080"
+    "test": "serve -p 8080",
+    "tscheck-client": "tsc --types node --target ES2020 --checkJs --allowJs --outFile typetests/client.js --module System t.js test.js decs.d.ts",
+    "tscheck": "npm run tscheck-client",
+    "lint": "npx eslint t.js test.js",
+    "check": "npm run lint && npm run tscheck"
   },
-  "version": "1.1.12"
+  "version": "1.1.12",
+  "devDependencies": {
+    "@types/node": "^14.0.13",
+    "eslint": "^7.3.0",
+    "typescript": "^3.9.5"
+  }
 }

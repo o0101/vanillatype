@@ -13,17 +13,27 @@
     ] : [ Buffer ])
   ]
 
+  const SEALED_DEFAULT = true;
   const isNone = instance => instance == null || instance == undefined;
 
   const typeCache = new Map();
 
-  Object.assign(T, {
-    check, sub, verify, validate, 
-    partialMatch,
-    def, defSub, defTuple, defCollection, defOr, option, defOption, maybe, or, 
-    guard, errors
-  });
-  
+  T.def = def;
+  T.check = check;
+  T.sub = sub;
+  T.verify = verify;
+  T.validate = validate;
+  T.partialMatch = partialMatch;
+  T.defSub = defSub;
+  T.defTuple = defTuple;
+  T.defCollection = defCollection;
+  T.defOr = defOr;
+  T.option = option;
+  T.defOption = defOption;
+  T.maybe = maybe;
+  T.guard = guard;
+  T.errors = errors;
+
   T[Symbol.for('jtype-system.typeCache')] = typeCache;
 
   defineSpecials();
@@ -45,7 +55,7 @@
     guardExists(type);
     const typeName = type.name;
 
-    const {spec,kind,help,verify,verifiers,sealed,native} = typeCache.get(typeName);
+    const {spec,kind,help,verify,verifiers,sealed} = typeCache.get(typeName);
 
     const specKeyPaths = spec ? allKeyPaths(spec).sort() : [];
     const specKeyPathSet = new Set(specKeyPaths);
@@ -55,7 +65,7 @@
     switch(kind) {
       case "def": {
         let allValid = true;
-        if ( !! spec ) {
+        if ( spec ) {
           const keyPaths = partial ? allKeyPaths(instance, specKeyPathSet) : specKeyPaths;
           allValid = !isNone(instance) && keyPaths.every(kp => {
             // Allow lookup errors if the type match for the key path can include None
@@ -83,7 +93,7 @@
         if ( partial && ! spec && !!verify ) {
           throw new TypeError(`Type checking with option 'partial' is not a valid option for types that` + 
             ` only use a verify function but have no spec`);
-        } else if ( !!verify ) {
+        } else if ( verify ) {
           try {
             verified = verify(instance);
             if ( ! verified ) {
@@ -152,7 +162,7 @@
               return valid;
             });
           }
-          if ( !!verify ) {
+          if ( verify ) {
             try {
               verified = verify(instance);
             } catch(e) {
@@ -247,7 +257,7 @@
     return T`>${type.name}`;
   }
 
-  function defSub(type, spec, {verify, help} = {}) {
+  function defSub(type, spec, {verify: verify = undefined, help:help = ''} = {}) {
     guardType(type);
     guardExists(type);
 
@@ -332,7 +342,7 @@
 
   function verify(...args) { return check(...args); }
 
-  function defCollection(name, {container, member}, {sealed,verify} = {}) {
+  function defCollection(name, {container, member}, {sealed: sealed = SEALED_DEFAULT, verify: verify = undefined} = {}) {
     if ( !name ) throw new TypeError(`Type must be named.`); 
     if ( !container || !member ) throw new TypeError(`Type must be specified.`);
     guardRedefinition(name);
@@ -367,19 +377,18 @@
       Object.defineProperty(this,'isSumType', {get: () => true});
       Object.defineProperty(this,'types', {get: () => typeSet});
     }
-    
   }
 
   Type.prototype.toString = function () {
-    return `${this.name} Type`;
+    return `${this.typeName} Type`;
   };
 
-  function def(name, spec, {help, verify, sealed, types, verifiers, native} = {}) {
+  function def(name, spec, {help:help = '', verify:verify = undefined, sealed:sealed = undefined, types:types = undefined, verifiers:verifiers = undefined, native:native = undefined} = {}) {
     if ( !name ) throw new TypeError(`Type must be named.`); 
     guardRedefinition(name);
 
     if ( name.startsWith('?') ) {
-      if ( !! spec ) {
+      if ( spec ) {
         throw new TypeError(`Option type can not have a spec.`);
       } 
 
@@ -396,11 +405,6 @@
     const cache = {spec,kind,help,verify,verifiers,sealed,types,native,type:t};
     typeCache.set(name, cache);
     return t;
-  }
-
-  function or(...types) { // anonymous standin for defOr
-    // could we do this with `name|name2|...` etc ?  we have to sort names so probably can
-    throw new TypeError(`Or is not implemented yet.`);
   }
 
   function defOr(name, ...types) {
@@ -434,7 +438,7 @@
   }
 
   function defineSpecials() {
-    T.def(`Any`, null, {verify: i => true});
+    T.def(`Any`, null, {verify: () => true});
     T.def(`Some`, null, {verify: i => !isUnset(i)});
     T.def(`None`, null, {verify: i => isUnset(i)});
     T.def(`Function`, null, {verify: i => i instanceof Function});

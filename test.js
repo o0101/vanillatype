@@ -1,7 +1,6 @@
 
   // FIXME verify functions ought to throw if they fail so errors can be collected 
   // without introducing a return value semantics
-  self.DEBUG = true;
   import {T} from './t.js';
   Object.assign(self, {T});
 
