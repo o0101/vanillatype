@@ -22,106 +22,169 @@ $ npm i --save jtype-system
 import {T} from 'jtype-system';
 ```
 
-But you'll need to be using [ESM](https://www.npmjs.com/package/esm)
+But you'll need to be using [ESM](https://www.npmjs.com/package/esm) or ES Modules.
 
-## aim
+## Why not TypeScript
+
+I think TS is good as a type-aware linter for checking issues, but in my experience adding static types that are then stripped away (in a time-consuming compile process):
+
+1) Increases developer time, more time to code the smae module
+2) Lengthens feedback and testing loop, more time to compile
+3) Does not meaningfully reduce the types of bugs I tend to accidentally introduce in my code
+
+I'm not saying typescript is never a good thing. I think every developer is different and so everyone should pick the tools that work for them. In my experience, the types of bugs I end up with are not ones that are solved by static typing. The type of custom runtime type checking I introduce with `jtype-system` I find useful and noticed I was doing again and again in various functions as a form of testing and input guarding boiler plate. So I wrote this library to make that experience more pleasurable, because that's important, but also to separate the 'cross-cutting concern' of type-checking logic from specific application and module logic.
+
+I like to use things like `eslint` and `typescript` to tighten up my code, and give me feedback and another perspective on structure and so on, but I don't think typescript is necessary to build whole projects in, in my experience (with full-stack JS projects from less to 100 to above 30K lines of code).
+
+## Another reason I like this
+
+Apart from writing it myself to suit my own work style, which is a great reason to like something, I like this because, if I want to change the syntax, or add some new feature that I want, it's really easy to change the library, which is only a couple hundred lines of code. If I wanted the same results from a third-party library, I'd have to wait. 
+
+## Summary of motivation
+
+So, on the whole, tools like this are, for me, about increasing my speed and effectiveness, as well as enjoyment. Enjoyment and fun is the main thing, and speed and effectiveness are really important, so that's why I write stuff like this to help me.
+
+It's surprising to me that this library has more than 2500 downloads form NPM, and regularly around 100 downloads a week, so clearly people are using it in their private projects. 
+
+## Example
 
 ```javascript
+import {T} from './t.js';
+  Object.assign(self, {T});
 
-// builtin type literal
-const stringType = T`String`
+  T.def('Cris', {
+    a: { b: { c: T`String` }}
+  });
 
-// custom type literal
-const todoType = T`Todo`
+  const result1 = T.validate(T`Cris`, {a:1});
+  console.log({result1});
+  console.assert(!result1.valid);
 
-// defining a custom type
+  const result2 = T.validate(T`Cris`, {a:{b:{c:'asdsad'}}});
+  console.log({result2});
+  console.assert(result2.valid);
 
-T.def('Todo', {
-  text: T.compound(T`String`, v => v.length < 1000),
-  id: T`Number`,
-  active: T`Boolean`,
-  editing: T`Boolean`,
-  completed: T`Boolean`
-})
+  T.defCollection(`DOMList`, {
+    container: T`>NodeList`,
+    member: T`>Node`
+  });
 
-T.defCollection('TodoList', {
-  container: T.enum(T`Array`, T`Set`), 
-  member: T`Todo`
-});
+  const result3 = T.validate(T`DOMList`, document.querySelectorAll('*'));
+  const result4 = T.validate(T`DOMList`, document.body.childNodes);
 
-// verifying a type instance, aliased by 'check' and 'verify'
+  console.log({result3});
+  console.assert(result3.valid);
+  console.log({result4});
+  console.assert(result4.valid);
 
-T.check('Todo', { text: 'abc', id: true }); // false
-T.verify('Todo', {text: 'abc', id: 1, active: true, editing: false, completed: false}); // true
+  T.defTuple(`TypeMapping`, {
+    pattern: [T`String`, T`>Object`]
+  });
 
-// guarding a type instance
+  T.defCollection(`TypeMap`, {
+    container: T`Map`,
+    member: T`TypeMapping`
+  });
 
-T.guard('Todo', { text: 'abc', id: true }); // throws TypeError
+  const result5 = T.validate(T`TypeMap`, T[Symbol.for('jtype-system.typeCache')]);
 
-// getting errors
+  console.log({result5});
+  console.assert(result5.valid);
 
-T.errors('Todo', {text: 'abc', id: 1, active: true, editing: false, completed: false}); // []
+  const result6 = [
+    T.check(T`Iterable`, []),
+    T.check(T`Iterable`, "ASDSAD"),
+    T.check(T`Iterable`, new Set()),
+    T.check(T`Iterable`, document.querySelectorAll('*')),
+    T.check(T`Iterable`, {}),
+    T.check(T`Iterable`, 12312),
+  ];
 
-T.errors('Todo', {text: 'abc', id: 1, /* active: true, */ editing: false, completed: false}); // []
+  console.log({result6});
+  console.assert(result6.join(',') == [true, true, true, true, false, false].join(','));
+
+  T.defOr(`Key`, T`String`, T`Integer`);
+  T.defOption(T`Key`);
+
+  const keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    123122232
+  ];
+  const not_keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    1231.22232
+  ];
+  const gappy_keys = [
+    "ASDSA",
+    1312312,
+    "asd",
+    null,
+    908098,
+    null,
+    "1232",
+    'safsda'
+  ];
+
+  T.defCollection(`KeyList`, {container: T`Iterable`, member: T`Key`});
+  T.defCollection(`OptionalKeyList`, {container: T`Iterable`, member: T`?Key`});
+
+  const result7 = T.validate(T`KeyList`, keys);
+  console.log({result7});
+  console.assert(result7.valid);
+  const result8 = T.validate(T`KeyList`, not_keys);
+  console.log({result8});
+  console.assert(!result8.valid);
+  const result9 = T.validate(T`OptionalKeyList`, gappy_keys);
+  console.log({result9});
+  console.assert(result9.valid);
+
+
+  T.def(`StrictContact`, {
+    name: T`String`,
+    mobile: T`Number`,
+    email: T`String`
+  }, {sealed:true});
+
+  const result10 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com'});
+  const result11 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com', new:true});
+
+  console.log({result10});
+  console.assert(result10.valid);
+  console.log({result11});
+  console.assert(!result11.valid);
+
+  const result12 = T.partialMatch(T`StrictContact`, {name:'Mobile'});
+  console.log({result12});
+  console.assert(result12.valid);
+
+  const result13 = T.partialMatch(T`StrictContact`, {name:'Mobile', blockhead:133133});
+  console.log({result13});
+  console.assert(!result13.valid);
+
+  T.def('Err', {
+    error: T`String`,
+    status: T.defOr('MaybeInteger', T`Integer`, T`None`),
+  });
+
+  const result14 = T.validate(T`Err`, {error:'No such page'});
+  console.log({result14});
+  console.assert(result14.valid);
+
+  T.def('Session', {
+    id: T`String`
+  });
+
+  T.def('WrappedSession', {
+    session: T`Session`
+  });
+
+  const result15 = T.validate(T`WrappedSession`, { session: {id : 'OK' }});
+  console.log({result15});
+  console.assert(result15.valid);
 ```
-
-In the final case `T.errors` returns:
-
-```
-[
-  { error: "Missing field", itemType: "Todo", missingProp: "actvie", missingPropType: "Boolean",
-    message: "Instance of type Todo is missing field active of type Boolean." }
-]
-```
-
-But this is not all. You can also:
-
-```JavaScript
-
-// option type
-
-const optionalString = T.option(T`String`);
-```
-
-So we've seen:
-
-- Collection types (container and member)
-- Compound types (a type augmented with one or more verifiers)
-- Enum types (lists of other types)
-- Option types 
-- Type verification, erroring and guarding.
-- Custom type definition
-- Built-in types already defined
-
-This is pretty good. 
-
-Future roadmap:
-
-- 'decorating' a function with a type signature and having it autoguarded.
-- method polymorphism (same name, multiple type signatures)
-- type inherence, given an object of unknown correct type, find it's most specific type
-- type mixin
-- type inheritance ? (unsure about this one)
-
-## what works sofar
-
-Most of the above examples work. Some major exceptions are error collecting is way less than it will be.
-
-The other thing is currently the verification methods (`check`, `validate`, `verify`, `errors`) only support an actual
-Type object as first argument, rather than a String name. I might change that in future, or I might not. 
-
-## faq - why not just TypeScript?
-
-Because I say it sucks. And so it does.
-
-Why add transpilation and a tool chain, and change your code, and add a whole bunch of assumptions, 
-when you can write a rudimentary type system in JS in a couple hundred lines.
-
-## purpose
-
-I made this because I wanted to replace boilerplate repitiious checking code at the start of functions with 
-something that was more consistent across different functions and frameworks, and that saved me time and saved me from thinking about the same types of book keeping, parameter validation issues, again and again.
-
-This is not supposed to be some "Ideal Type System", it is meant to be a practical tool that helps with the above to improve developer productivity. But ideas from "Ideal type systems", and "theories" are liberally borrowed when they are useful for this purpose / make the code / conceptual model cleaner and clearer. 
 
 
