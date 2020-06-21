@@ -208,7 +208,7 @@
               `' when ${resolved} was found at '${nextKey}'.` 
           });
         } else if ( !!canBeNone && canBeNone() ) {
-          // no issues
+          resolved = undefined;
         } else {
           errors.push({
             error: 
@@ -242,8 +242,7 @@
     }
 
     if ( typeA.name.startsWith('>') || typeB.name.startsWith('>') ) {
-      //throw new Error(`Check type match has not been implemented for derived//sub types yet.`);
-
+      new Error(`Check type match has not been implemented for derived//sub types yet.`);
     }
 
     return false;
