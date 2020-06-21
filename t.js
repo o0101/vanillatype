@@ -242,7 +242,7 @@
     }
 
     if ( typeA.name.startsWith('>') || typeB.name.startsWith('>') ) {
-      new Error(`Check type match has not been implemented for derived//sub types yet.`);
+      console.error(new Error(`Check type match has not been implemented for derived//sub types yet.`));
     }
 
     return false;
