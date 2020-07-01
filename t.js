@@ -256,7 +256,7 @@
     return T`>${type.name}`;
   }
 
-  function defSub(type, spec, {verify: verify = undefined, help:help = ''} = {}) {
+  function defSub(type, spec, {verify: verify = undefined, help:help = ''} = {}, name = '') {
     guardType(type);
     guardExists(type);
 
@@ -271,7 +271,7 @@
       spec.verifiers.push({help:helpMsg,verify});
     }
 
-    return def(`>${type.name}`, spec, {verify,help});
+    return def(`${name}>${type.name}`, spec, {verify,help});
   }
 
   function exists(name) {
