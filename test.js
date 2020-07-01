@@ -137,3 +137,11 @@
   const result15 = T.validate(T`WrappedSession`, { session: {id : 'OK' }});
   console.log({result15});
   console.assert(result15.valid);
+
+  T.defEnum('Fruit', 'Apple', 'Pear', 'Pineapple', 'Melon');
+  const result16 = T.validate(T`Fruit`, 'Melon');
+  const result17 = T.validate(T`Fruit`, 'Rock');
+  console.log({result16,result17});
+  console.assert(result16.valid);
+  console.assert(!result17.valid);
+

@@ -24,6 +24,7 @@
   T.verify = verify;
   T.validate = validate;
   T.partialMatch = partialMatch;
+  T.defEnum = defEnum;
   T.defSub = defSub;
   T.defTuple = defTuple;
   T.defCollection = defCollection;
@@ -272,6 +273,17 @@
     }
 
     return def(`${name}>${type.name}`, spec, {verify,help});
+  }
+
+  function defEnum(name, ...values) {
+    if ( !name ) throw new TypeError(`Type must be named.`); 
+    guardRedefinition(name);
+    
+    const valueSet = new Set(values);
+    const verify = i => valueSet.has(i);
+    const help = `Value of Enum type ${name} must be one of ${values.join(',')}`;
+
+    return def(name, null, {verify,help});
   }
 
   function exists(name) {
