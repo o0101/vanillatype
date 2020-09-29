@@ -7,16 +7,17 @@
     "esm": "^3.0.74"
   },
   "deprecated": false,
-  "description": "A rudimentary type system for JS",
+  "description": "Lightweight runtime types for vanilla JS and Node",
   "keywords": [
     "javascript",
     "type-system",
+    "vanillatype",
     "jtype",
     "dosy"
   ],
   "license": "MIT",
   "main": "index.js",
-  "name": "jtype-system",
+  "name": "vanillatype",
   "repository": {
     "type": "git",
     "url": "https://github.com//crislin2046/jtype"
