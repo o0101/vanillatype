@@ -5,10 +5,9 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 ## Features
 
 - built-in support for built-in types!
-- common patterns like collection, or, maybe and enum types
+- common patterns like **collection, or, maybe** and **enum** types
 - fully optional
 - simple literate syntax
-- annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
 - custom help fields to add context to type errors
 - optional partial (subset) matching
 - T.check
@@ -26,6 +25,8 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 - T.maybe
 - T.guard
 - T.errors
+- annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
+
 
 ## Another reason I like this
 
