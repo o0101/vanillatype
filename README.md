@@ -9,7 +9,7 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 - fully optional
 - simple literate syntax
 - annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
-- only 7kb packed
+- custom help fields to add context to type errors
 - T.check
 - T.sub
 - T.verify
@@ -30,151 +30,121 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 
 Apart from writing it myself to suit my own work style, which is a great reason to like something, I like this because, if I want to change the syntax, or add some new feature that I want, it's really easy to change the library, which is only a couple hundred lines of code. If I wanted the same results from a third-party library, I'd have to wait. 
 
-## Example
+## A Users examples 
 
+Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
+
+*users.js:*
 ```javascript
-import {T} from './t.js';
-  Object.assign(self, {T});
+  import {T} from 'vanillatype';
+  import {DEBUG, USER_TABLE} from '../common.js';
+  import {_getTable, getSearchResult} from '../db_helpers.js';
 
-  T.def('Cris', {
-    a: { b: { c: T`String` }}
+  T.def('User', {
+    _id: T`ID`,
+    _owner: T`ID`,
+    username: T`Username`,
+    email: T`Email`,
+    newEmail: T.maybe(T`Email`),
+    salt: T`Integer`,
+    passwordHash: T`Hash`,
+    groups: T`GroupArray`,
+    stripeCustomerID: T`String`,
+    verified: T.maybe(T`Boolean`)
   });
 
-  const result1 = T.validate(T`Cris`, {a:1});
-  console.log({result1});
-  console.assert(!result1.valid);
+  export default function validate(user) {
+    const errors = T.errors(T`User`, user);
 
-  const result2 = T.validate(T`Cris`, {a:{b:{c:'asdsad'}}});
-  console.log({result2});
-  console.assert(result2.valid);
+    validateUsernameUniqueness(user, errors);
 
-  T.defCollection(`DOMList`, {
-    container: T`>NodeList`,
-    member: T`>Node`
-  });
+    return errors;
+  }
 
-  const result3 = T.validate(T`DOMList`, document.querySelectorAll('*'));
-  const result4 = T.validate(T`DOMList`, document.body.childNodes);
+  export function validatePartial(partialUser, requestType) {
+    let {valid,errors} = T.partialMatch(T`User`, partialUser);
 
-  console.log({result3});
-  console.assert(result3.valid);
-  console.log({result4});
-  console.assert(result4.valid);
+    if ( requestType != "get" ) {
+      if ( valid && partialUser.username ) {
+        valid = valid && validateUsernameUniqueness(partialUser, errors);
+      }
+    }
 
-  T.defTuple(`TypeMapping`, {
-    pattern: [T`String`, T`>Object`]
-  });
+    return {valid,errors};
+  }
 
-  T.defCollection(`TypeMap`, {
-    container: T`Map`,
-    member: T`TypeMapping`
-  });
+  function validateUsernameUniqueness(user, errors) {
+    const users = _getTable(USER_TABLE);
+    const usernameResults = users.getAllMatchingKeysFromIndex("username", user.username);
 
-  const result5 = T.validate(T`TypeMap`, T[Symbol.for('jtype-system.typeCache')]);
+    if ( usernameResults.length ) {
+      const userErrors = [];
+      for( const otherUserId of usernameResults ) {
+        if ( otherUserId == user._id ) continue;
+        else userErrors.push(otherUserId);
+      }
 
-  console.log({result5});
-  console.assert(result5.valid);
+      if ( userErrors.length ) {
+        errors.push(`Username ${user.username} already exists.`);
+        DEBUG.INFO && console.info({usernameResults, userErrors, user});
+        return false;
+      }
+    }
 
-  const result6 = [
-    T.check(T`Iterable`, []),
-    T.check(T`Iterable`, "ASDSAD"),
-    T.check(T`Iterable`, new Set()),
-    T.check(T`Iterable`, document.querySelectorAll('*')),
-    T.check(T`Iterable`, {}),
-    T.check(T`Iterable`, 12312),
-  ];
-
-  console.log({result6});
-  console.assert(result6.join(',') == [true, true, true, true, false, false].join(','));
-
-  T.defOr(`Key`, T`String`, T`Integer`);
-  T.defOption(T`Key`);
-
-  const keys = [
-    "ASDSA",
-    1312312,
-    "asd",
-    123122232
-  ];
-  const not_keys = [
-    "ASDSA",
-    1312312,
-    "asd",
-    1231.22232
-  ];
-  const gappy_keys = [
-    "ASDSA",
-    1312312,
-    "asd",
-    null,
-    908098,
-    null,
-    "1232",
-    'safsda'
-  ];
-
-  T.defCollection(`KeyList`, {container: T`Iterable`, member: T`Key`});
-  T.defCollection(`OptionalKeyList`, {container: T`Iterable`, member: T`?Key`});
-
-  const result7 = T.validate(T`KeyList`, keys);
-  console.log({result7});
-  console.assert(result7.valid);
-  const result8 = T.validate(T`KeyList`, not_keys);
-  console.log({result8});
-  console.assert(!result8.valid);
-  const result9 = T.validate(T`OptionalKeyList`, gappy_keys);
-  console.log({result9});
-  console.assert(result9.valid);
-
-
-  T.def(`StrictContact`, {
-    name: T`String`,
-    mobile: T`Number`,
-    email: T`String`
-  }, {sealed:true});
-
-  const result10 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com'});
-  const result11 = T.validate(T`StrictContact`, {name:'Cris', mobile:999, email:'777@gmail.com', new:true});
-
-  console.log({result10});
-  console.assert(result10.valid);
-  console.log({result11});
-  console.assert(!result11.valid);
-
-  const result12 = T.partialMatch(T`StrictContact`, {name:'Mobile'});
-  console.log({result12});
-  console.assert(result12.valid);
-
-  const result13 = T.partialMatch(T`StrictContact`, {name:'Mobile', blockhead:133133});
-  console.log({result13});
-  console.assert(!result13.valid);
-
-  T.def('Err', {
-    error: T`String`,
-    status: T.defOr('MaybeInteger', T`Integer`, T`None`),
-  });
-
-  const result14 = T.validate(T`Err`, {error:'No such page'});
-  console.log({result14});
-  console.assert(result14.valid);
-
-  T.def('Session', {
-    id: T`String`
-  });
-
-  T.def('WrappedSession', {
-    session: T`Session`
-  });
-
-  const result15 = T.validate(T`WrappedSession`, { session: {id : 'OK' }});
-  console.log({result15});
-  console.assert(result15.valid);
+    return true;
+  }
 ```
+
+*types.js:*
+```javascript
+  import {T} from 'vanillatype';
+
+  // common types required for compound types
+  // we define them once here 
+  // to avoid trying to redefine in each file that uses them
+
+  // regexes 
+    const UsernameRegExp = /^[a-zA-Z][a-zA-Z0-9]{4,16}$/
+
+    /* eslint-disable no-control-regex */
+
+    const EmailRegExp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
+
+    /* eslint-enable no-control-regex */
+
+    const HexRegExp = /^[a-f0-9]{8,100}$/i;
+
+  T.defOr('MaybeBoolean', T`Boolean`, T`None`);
+  T.defOr('ID', T`String`, T`Number`);
+
+  T.def('URL', null, {
+    verify: i => { 
+      try { 
+        return new URL(i); 
+      } catch(e) { 
+        return false; 
+      }
+    },
+    help: "A valid URL"
+  });
+
+  // user field types
+    T.defCollection('GroupArray',  {
+      container: T`Array`,
+      member: T`String`
+    });
+
+    T.def('Username', null, {verify: i => UsernameRegExp.test(i) && i.length < 200, help:"Alphanumeric between 5 and 16 characters"});
+    T.def('Email', null, {verify: i => EmailRegExp.test(i) && i.length < 200, help: "A valid email address"});
+    T.def('Hash', null, {verify: i => HexRegExp.test(i) && i.length < 200, help: "A hexadecimal hash value, between 8 and 100 characters"});
+```
+
+For more comprehensive examples see [vanillatype's test file](https://github.com/cris691/vanillatype/blob/master/test.js).
 
 
 ## getting and incorporating
 
-You can use the template repo or import using the old name on npm (vanillatype wasn't available).
+You can use the template repo or import using the old name on npm (vanillatype wasn't available to me, it is now).
 
 We use ES modules.
 
@@ -187,8 +157,16 @@ You can use in your client side code like:
 While the tests are currently only written for client side, you can use in Node.js like so:
 
 ```shell
+$ npm i --save vanillatype
+```
+
+or using the old name
+
+```shell
 $ npm i --save jtype-system
 ```
+
+Then:
 
 ```JavaScript
 import {T} from 'jtype-system';
