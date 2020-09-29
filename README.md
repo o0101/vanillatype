@@ -2,9 +2,7 @@
 
 Lightweight run time types for vanilla JavaScript and Node.JS.
 
-## A Users examples 
-
-Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and [servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
+## A Users example from production
 
 *users.js:*
 ```javascript
@@ -83,6 +81,9 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
       help: "A hexadecimal hash value, between 8 and 100 characters"
     });
 ```
+
+Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and [servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
+
 ## Features
 
 - built-in support for built-in types!
