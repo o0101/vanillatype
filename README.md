@@ -2,7 +2,6 @@
 
 Lightweight run time types for vanilla JavaScript and Node.JS.
 
-
 ## Features
 
 - built-in support for built-in types!
