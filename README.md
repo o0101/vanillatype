@@ -9,6 +9,7 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 - fully optional
 - simple literate syntax
 - annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
+- only 7kb packed
 - T.check
 - T.sub
 - T.verify
