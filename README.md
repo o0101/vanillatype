@@ -10,6 +10,7 @@ Lightweight run time types for vanilla JavaScript and Node.JS.
 - simple literate syntax
 - annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
 - custom help fields to add context to type errors
+- optional partial (subset) matching
 - T.check
 - T.sub
 - T.verify
