@@ -2,36 +2,6 @@
 
 Lightweight run time types for vanilla JavaScript and Node.JS.
 
-## Features
-
-- built-in support for built-in types!
-- common patterns like **collection, or, maybe** and **enum** types
-- fully optional
-- simple literate syntax
-- custom help fields to add context to type errors
-- optional partial (subset) matching
-- T.check
-- T.sub
-- T.verify
-- T.validate
-- T.partialMatch
-- T.defEnum
-- T.defSub
-- T.defTuple
-- T.defCollection
-- T.defOr
-- T.option
-- T.defOption
-- T.maybe
-- T.guard
-- T.errors
-- annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
-
-
-## Another reason I like this
-
-Apart from writing it myself to suit my own work style, which is a great reason to like something, I like this because, if I want to change the syntax, or add some new feature that I want, it's really easy to change the library, which is only a couple hundred lines of code. If I wanted the same results from a third-party library, I'd have to wait. 
-
 ## A Users examples 
 
 Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and [servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
@@ -39,8 +9,6 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
 *users.js:*
 ```javascript
   import {T} from 'vanillatype';
-  import {DEBUG, USER_TABLE} from '../common.js';
-  import {_getTable, getSearchResult} from '../db_helpers.js';
 
   T.def('User', {
     _id: T`ID`,
@@ -62,39 +30,8 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
 
     return errors;
   }
-
-  export function validatePartial(partialUser, requestType) {
-    let {valid,errors} = T.partialMatch(T`User`, partialUser);
-
-    if ( requestType != "get" ) {
-      if ( valid && partialUser.username ) {
-        valid = valid && validateUsernameUniqueness(partialUser, errors);
-      }
-    }
-
-    return {valid,errors};
-  }
-
-  function validateUsernameUniqueness(user, errors) {
-    const users = _getTable(USER_TABLE);
-    const usernameResults = users.getAllMatchingKeysFromIndex("username", user.username);
-
-    if ( usernameResults.length ) {
-      const userErrors = [];
-      for( const otherUserId of usernameResults ) {
-        if ( otherUserId == user._id ) continue;
-        else userErrors.push(otherUserId);
-      }
-
-      if ( userErrors.length ) {
-        errors.push(`Username ${user.username} already exists.`);
-        DEBUG.INFO && console.info({usernameResults, userErrors, user});
-        return false;
-      }
-    }
-
-    return true;
-  }
+  
+  //...
 ```
 
 *types.js:*
@@ -115,20 +52,21 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
     /* eslint-enable no-control-regex */
 
     const HexRegExp = /^[a-f0-9]{8,100}$/i;
+  
+  // common types
+    T.defOr('MaybeBoolean', T`Boolean`, T`None`);
+    T.defOr('ID', T`String`, T`Number`);
 
-  T.defOr('MaybeBoolean', T`Boolean`, T`None`);
-  T.defOr('ID', T`String`, T`Number`);
-
-  T.def('URL', null, {
-    verify: i => { 
-      try { 
-        return new URL(i); 
-      } catch(e) { 
-        return false; 
-      }
-    },
-    help: "A valid URL"
-  });
+    T.def('URL', null, {
+      verify: i => { 
+        try { 
+          return new URL(i); 
+        } catch(e) { 
+          return false; 
+        }
+      },
+      help: "A valid URL"
+    });
 
   // user field types
     T.defCollection('GroupArray',  {
@@ -140,18 +78,51 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
       verify: i => UsernameRegExp.test(i) && i.length < 200, 
       help:"Alphanumeric between 5 and 16 characters"
     });
+    
     T.def('Email', null, {
       verify: i => EmailRegExp.test(i) && i.length < 200, 
       help: "A valid email address"
     });
+    
     T.def('Hash', null, {
       verify: i => HexRegExp.test(i) && i.length < 200, 
       help: "A hexadecimal hash value, between 8 and 100 characters"
     });
 ```
+## Features
+
+- built-in support for built-in types!
+- common patterns like **collection, or, maybe** and **enum** types
+- fully optional
+- simple literate syntax
+- custom help fields to add context to type errors
+- optional partial (subset) matching
+
+## Function list
+- T.check
+- T.sub
+- T.verify
+- T.validate
+- T.partialMatch
+- T.defEnum
+- T.defSub
+- T.defTuple
+- T.defCollection
+- T.defOr
+- T.option
+- T.defOption
+- T.maybe
+- T.guard
+- T.errors
+- annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
+
+## Another reason I like this
+
+Apart from writing it myself to suit my own work style, which is a great reason to like something, I like this because, if I want to change the syntax, or add some new feature that I want, it's really easy to change the library, which is only a couple hundred lines of code. If I wanted the same results from a third-party library, I'd have to wait. 
+
+## More examples
 
 For more comprehensive examples see [vanillatype's test file](https://github.com/cris691/vanillatype/blob/master/test.js).
-
 
 ## getting and incorporating
 
