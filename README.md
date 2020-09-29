@@ -1,6 +1,6 @@
 # :icecream: [vanillatype](https://github.com/crislin2046/vanillatype) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
 
-Lightweight run time types for vanilla JavaScript.
+Lightweight run time types for vanilla JavaScript and Node.JS.
 
 
 ## Features
