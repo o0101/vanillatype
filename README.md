@@ -32,7 +32,7 @@ Apart from writing it myself to suit my own work style, which is a great reason 
 
 ## A Users examples 
 
-Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
+Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/blob/master/_schemas/users.js) and [servedata/types.js](https://github.com/cris691/servedata/blob/master/types.js)
 
 *users.js:*
 ```javascript
