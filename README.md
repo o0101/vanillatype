@@ -8,7 +8,8 @@ Simple run time types for vanilla JavaScript.
 - built-in support for built-in types!
 - common patterns like collection, or, maybe and enum types
 - fully optional
-- annotate a function to take and return types (coming!)
+- simple literate syntax
+- annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
 - T.check
 - T.sub
 - T.verify
