@@ -1,50 +1,33 @@
-# :balance_scale: [jtype-system](https://github.com/crislin2046/jtype-system) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
+# :balance_scale: [vanillatype](https://github.com/crislin2046/vanillatype) ![npm downloads](https://img.shields.io/npm/dt/jtype-system) ![version](https://img.shields.io/npm/v/jtype-system?label=%22%22)
 
-Simple type-checking system for JavaScript at runtime.
+Simple run time types for vanilla JavaScript.
 
-## getting and incorporating
 
-We use ES modules.
+## Features
 
-You can use in your client side code like:
-
-```JavaScript
-  import {T} from 'https://unpkg.com/jtype-system/t.js';
-```
-
-While the tests are currently only written for client side, you can use in Node.js like so:
-
-```shell
-$ npm i --save jtype-system
-```
-
-```JavaScript
-import {T} from 'jtype-system';
-```
-
-But you'll need to be using [ESM](https://www.npmjs.com/package/esm) or ES Modules.
-
-## Why not TypeScript
-
-I think TS is good as a type-aware linter for checking issues, but in my experience adding static types that are then stripped away (in a time-consuming compile process):
-
-1) Increases developer time, more time to code the smae module
-2) Lengthens feedback and testing loop, more time to compile
-3) Does not meaningfully reduce the types of bugs I tend to accidentally introduce in my code
-
-I'm not saying typescript is never a good thing. I think every developer is different and so everyone should pick the tools that work for them. In my experience, the types of bugs I end up with are not ones that are solved by static typing. The type of custom runtime type checking I introduce with `jtype-system` I find useful and noticed I was doing again and again in various functions as a form of testing and input guarding boiler plate. So I wrote this library to make that experience more pleasurable, because that's important, but also to separate the 'cross-cutting concern' of type-checking logic from specific application and module logic.
-
-I like to use things like `eslint` and `typescript` to tighten up my code, and give me feedback and another perspective on structure and so on, but I don't think typescript is necessary to build whole projects in, in my experience (with full-stack JS projects from less to 100 to above 30K lines of code).
+- built-in support for built-in types!
+- common patterns like collection, or, maybe and enum types
+- fully optional
+- annotate a function to take and return types (coming!)
+- T.check
+- T.sub
+- T.verify
+- T.validate
+- T.partialMatch
+- T.defEnum
+- T.defSub
+- T.defTuple
+- T.defCollection
+- T.defOr
+- T.option
+- T.defOption
+- T.maybe
+- T.guard
+- T.errors
 
 ## Another reason I like this
 
 Apart from writing it myself to suit my own work style, which is a great reason to like something, I like this because, if I want to change the syntax, or add some new feature that I want, it's really easy to change the library, which is only a couple hundred lines of code. If I wanted the same results from a third-party library, I'd have to wait. 
-
-## Summary of motivation
-
-So, on the whole, tools like this are, for me, about increasing my speed and effectiveness, as well as enjoyment. Enjoyment and fun is the main thing, and speed and effectiveness are really important, so that's why I write stuff like this to help me.
-
-It's surprising to me that this library has more than 2500 downloads form NPM, and regularly around 100 downloads a week, so clearly people are using it in their private projects. 
 
 ## Example
 
@@ -188,3 +171,31 @@ import {T} from './t.js';
 ```
 
 
+## getting and incorporating
+
+You can use the template repo or import using the old name on npm (vanillatype wasn't available).
+
+We use ES modules.
+
+You can use in your client side code like:
+
+```JavaScript
+  import {T} from 'https://unpkg.com/jtype-system/t.js';
+```
+
+While the tests are currently only written for client side, you can use in Node.js like so:
+
+```shell
+$ npm i --save jtype-system
+```
+
+```JavaScript
+import {T} from 'jtype-system';
+```
+
+But you'll need to be using [ESM](https://www.npmjs.com/package/esm) or ES Modules.
+
+
+-------------
+
+***VanillaType!***
