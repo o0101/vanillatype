@@ -38,23 +38,16 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
 ```javascript
   import {T} from 'vanillatype';
 
-  // common types required for compound types
-  // we define them once here 
-  // to avoid trying to redefine in each file that uses them
-
   // regexes 
+  
     const UsernameRegExp = /^[a-zA-Z][a-zA-Z0-9]{4,16}$/
-
-    /* eslint-disable no-control-regex */
-
     const EmailRegExp = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
-
-    /* eslint-enable no-control-regex */
-
     const HexRegExp = /^[a-f0-9]{8,100}$/i;
   
   // common types
+  
     T.defOr('MaybeBoolean', T`Boolean`, T`None`);
+    
     T.defOr('ID', T`String`, T`Number`);
 
     T.def('URL', null, {
@@ -69,6 +62,7 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
     });
 
   // user field types
+  
     T.defCollection('GroupArray',  {
       container: T`Array`,
       member: T`String`
