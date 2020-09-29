@@ -136,9 +136,18 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
       member: T`String`
     });
 
-    T.def('Username', null, {verify: i => UsernameRegExp.test(i) && i.length < 200, help:"Alphanumeric between 5 and 16 characters"});
-    T.def('Email', null, {verify: i => EmailRegExp.test(i) && i.length < 200, help: "A valid email address"});
-    T.def('Hash', null, {verify: i => HexRegExp.test(i) && i.length < 200, help: "A hexadecimal hash value, between 8 and 100 characters"});
+    T.def('Username', null, {
+      verify: i => UsernameRegExp.test(i) && i.length < 200, 
+      help:"Alphanumeric between 5 and 16 characters"
+    });
+    T.def('Email', null, {
+      verify: i => EmailRegExp.test(i) && i.length < 200, 
+      help: "A valid email address"
+    });
+    T.def('Hash', null, {
+      verify: i => HexRegExp.test(i) && i.length < 200, 
+      help: "A hexadecimal hash value, between 8 and 100 characters"
+    });
 ```
 
 For more comprehensive examples see [vanillatype's test file](https://github.com/cris691/vanillatype/blob/master/test.js).
