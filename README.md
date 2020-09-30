@@ -110,6 +110,18 @@ Taken from [servedata/_schemas/users.js](https://github.com/cris691/servedata/bl
 - T.guard
 - T.errors
 - annotate a function to take and return types ([coming](https://github.com/cris691/vanillatype/issues/13)!)
+- built in specials:
+```js
+function defineSpecials() {
+    T.def(`Any`, null, {verify: () => true});
+    T.def(`Some`, null, {verify: i => !isUnset(i)});
+    T.def(`None`, null, {verify: i => isUnset(i)});
+    T.def(`Function`, null, {verify: i => i instanceof Function});
+    T.def(`Integer`, null, {verify: i => Number.isInteger(i)});
+    T.def(`Array`, null, {verify: i => Array.isArray(i)});
+    T.def(`Iterable`, null, {verify: i => i[Symbol.iterator] instanceof Function});
+  }
+```
 
 ## Another reason I like this
 
