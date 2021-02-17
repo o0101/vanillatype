@@ -10,7 +10,9 @@
       Node,NodeList,Element,HTMLElement, Blob, ArrayBuffer,
       FileList, Text, HTMLDocument, Document, DocumentFragment,
       Error, File, Event, EventTarget, URL
+    /* eslint-disable no-undef */
     ] : [ Buffer ])
+    /* eslint-enable no-undef */
   ]
 
   const DEBUG = false;
