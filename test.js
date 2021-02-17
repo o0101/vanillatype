@@ -1,8 +1,15 @@
 
-  // FIXME verify functions ought to throw if they fail so errors can be collected 
-  // without introducing a return value semantics
   import {T} from './t.js';
   Object.assign(self, {T});
+
+  const result0 = T.validate(T`Number`, 0);
+  console.log({result0});
+  console.assert(result0.valid);
+
+  T.defOr('KeyVal', T`String`, T`Number`);
+  const result01 = T.validate(T`KeyVal`, 0);
+  console.log({result01});
+  console.assert(result01.valid);
 
   T.def('Cris', {
     a: { b: { c: T`String` }}
